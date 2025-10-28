@@ -1,4 +1,4 @@
-package ru.practicum.stat.service;
+package ru.practicum.stats.service;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.stats.dto.EndpointHitCreate;
 import ru.practicum.stats.dto.ViewStats;
-import ru.practicum.stat.service.exception.StatValidationException;
+import ru.practicum.stats.service.exception.StatValidationException;
 
 import java.time.LocalDateTime;
 import java.util.List;
