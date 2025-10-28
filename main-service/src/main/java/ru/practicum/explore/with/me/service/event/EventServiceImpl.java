@@ -39,7 +39,7 @@ import ru.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.practicum.explore.with.me.repository.UserRepository;
 import ru.practicum.explore.with.me.util.ExistenceValidator;
 import ru.practicum.explore.with.me.util.StatsGetter;
-import ru.practicum.stat.dto.ViewStats;
+import ru.practicum.stats.dto.ViewStats;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import ru.practicum.stat.client.StatClient;
-import ru.practicum.stat.dto.EndpointHitCreate;
+import ru.practicum.stats.dto.EndpointHitCreate;
 
 import java.time.LocalDateTime;
 
