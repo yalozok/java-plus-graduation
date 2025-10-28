@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.explore.with.me.model.event.dto.EventViewsParameters;
-import ru.practicum.stat.client.StatClient;
+import ru.practicum.stats.client.StatClient;
 import ru.practicum.stats.dto.ViewStats;
 
 import java.util.List;

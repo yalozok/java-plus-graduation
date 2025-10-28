@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface StatRepository extends JpaRepository<Hit, Long> {
     @Query("""
-        SELECT new ru.practicum.stat.dto.ViewStats(h.app, h.uri, COUNT(h))
+        SELECT new ru.practicum.stats.dto.ViewStats(h.app, h.uri, COUNT(h))
         FROM Hit h
         WHERE h.created BETWEEN :start AND :end
         AND (:uris IS NULL OR h.uri IN :uris)
@@ -22,7 +22,7 @@ public interface StatRepository extends JpaRepository<Hit, Long> {
                                 @Param("uris") List<String> uris);
 
     @Query("""
-        SELECT new ru.practicum.stat.dto.ViewStats(h.app, h.uri, COUNT(DISTINCT h.ip))
+        SELECT new ru.practicum.stats.dto.ViewStats(h.app, h.uri, COUNT(DISTINCT h.ip))
         FROM Hit h
         WHERE h.created BETWEEN :start AND :end
         AND (:uris IS NULL OR h.uri IN :uris)

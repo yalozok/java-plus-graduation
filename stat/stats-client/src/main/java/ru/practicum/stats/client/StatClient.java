@@ -1,4 +1,4 @@
-package ru.practicum.stat.client;
+package ru.practicum.stats.client;
 
 import org.springframework.http.ResponseEntity;
 import ru.practicum.stats.dto.EndpointHitCreate;
