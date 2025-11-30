@@ -32,7 +32,7 @@ services:
   ewm-service:
     build:
       context: .
-      dockerfile: main-service/Dockerfile
+      dockerfile: core/main-service/Dockerfile
     depends_on: [ ewm-db, stats-server ]
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
