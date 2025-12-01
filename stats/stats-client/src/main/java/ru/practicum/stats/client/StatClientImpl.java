@@ -1,31 +1,47 @@
 package ru.practicum.stats.client;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.stats.dto.EndpointHitCreate;
 import ru.practicum.stats.dto.ViewStats;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
+@Service
 public class StatClientImpl implements StatClient {
+    private final DiscoveryClient discoveryClient;
+    private final RetryTemplate retryTemplate;
+    private final String statsServiceId;
     private final RestClient client;
-    @Value("${stat.server-url}")
-    private String serverUrl;
 
-    public RestClient restClient() {
-        return RestClient.builder()
-                .baseUrl(serverUrl)
-                .build();
+    public StatClientImpl(DiscoveryClient discoveryClient,
+                          @Value("${discovery.services.stats-server-id}") String statsServiceId) {
+        this.discoveryClient = discoveryClient;
+        this.statsServiceId = statsServiceId;
+        this.client = RestClient.builder().build();
+
+        this.retryTemplate = new RetryTemplate();
+        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+        fixedBackOffPolicy.setBackOffPeriod(3000L);
+        retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+
+        MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
+        retryPolicy.setMaxAttempts(3);
+        retryTemplate.setRetryPolicy(retryPolicy);
     }
 
     public ResponseEntity<Void> createHit(EndpointHitCreate endpointHitCreate) {
@@ -33,7 +49,7 @@ public class StatClientImpl implements StatClient {
 
         ResponseEntity<Void> result = client
                 .post()
-                .uri("/hit")
+                .uri(makeStatsServerUrl() + "/hit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(endpointHitCreate)
                 .retrieve()
@@ -58,7 +74,7 @@ public class StatClientImpl implements StatClient {
                 start, end, uris, unique);
 
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(serverUrl + "/stats")
+                .fromUriString(makeStatsServerUrl() + "/stats")
                 .queryParam("start", start)
                 .queryParam("end", end)
                 .queryParam("unique", unique);
@@ -83,5 +99,30 @@ public class StatClientImpl implements StatClient {
         }
 
         return result;
+    }
+
+    private ServiceInstance getInstance() {
+        try {
+            List<ServiceInstance> instances = discoveryClient.getInstances(statsServiceId);
+
+            log.info("Discovered {} instances for service '{}': {}",
+                    instances.size(), statsServiceId, instances);
+
+            if (instances.isEmpty()) {
+                throw new StatsServerUnavailable(
+                        "No instances found in Eureka for serviceId=" + statsServiceId);
+            }
+
+            return instances.getFirst();
+        } catch (Exception exception) {
+            throw new StatsServerUnavailable(
+                    "Error while discovering stats server with id: " + statsServiceId
+            );
+        }
+    }
+
+    private URI makeStatsServerUrl() {
+        ServiceInstance instance = retryTemplate.execute(cxt -> getInstance());
+        return URI.create("http://" + instance.getHost() + ":" + instance.getPort());
     }
 }
