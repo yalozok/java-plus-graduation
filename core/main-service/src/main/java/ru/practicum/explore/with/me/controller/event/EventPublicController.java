@@ -23,7 +23,7 @@ import ru.practicum.explore.with.me.model.event.dto.EventFullDto;
 import ru.practicum.explore.with.me.model.event.dto.EventShortDto;
 import ru.practicum.explore.with.me.service.comment.CommentService;
 import ru.practicum.explore.with.me.service.event.EventService;
-import ru.practicum.explore.with.me.util.StatSaver;
+import ru.practicum.stats.client.StatClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,7 +37,7 @@ import java.util.Objects;
 public class EventPublicController {
     private final EventService eventsService;
     private final CommentService commentService;
-    private final StatSaver statSaver;
+    private final StatClient statClient;
     private final String className = this.getClass().getSimpleName();
 
     @GetMapping
@@ -52,7 +52,7 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "0") int from,
                                          @RequestParam(defaultValue = "10") int size,
                                          HttpServletRequest request) {
-        statSaver.save(request, className);
+        statClient.createHit(request);
 
         PublicEventParam publicEventParam = new PublicEventParam();
         publicEventParam.setText(Objects.requireNonNullElse(text, ""));
@@ -73,7 +73,7 @@ public class EventPublicController {
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                      HttpServletRequest request) {
-        statSaver.save(request, className);
+        statClient.createHit(request);
         log.trace("{}: getEventById() call with eventId: {}", className, eventId);
         return eventsService.getPublicEventById(eventId);
     }

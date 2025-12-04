@@ -1,5 +1,6 @@
 package ru.practicum.stats.client;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
@@ -27,11 +28,14 @@ public class StatClientImpl implements StatClient {
     private final RetryTemplate retryTemplate;
     private final String statsServiceId;
     private final RestClient client;
+    private final String app;
 
     public StatClientImpl(DiscoveryClient discoveryClient,
-                          @Value("${discovery.services.stats-server-id}") String statsServiceId) {
+                          @Value("${discovery.services.stats-server-id}") String statsServiceId,
+                          @Value("${spring.application.name}") String app) {
         this.discoveryClient = discoveryClient;
         this.statsServiceId = statsServiceId;
+        this.app = app;
         this.client = RestClient.builder().build();
 
         this.retryTemplate = new RetryTemplate();
@@ -44,14 +48,20 @@ public class StatClientImpl implements StatClient {
         retryTemplate.setRetryPolicy(retryPolicy);
     }
 
-    public ResponseEntity<Void> createHit(EndpointHitCreate endpointHitCreate) {
-        log.trace("STAT CLIENT: createHit() call with endpointHitCreate body: {}", endpointHitCreate);
+    public void createHit(HttpServletRequest request) {
+        log.trace("STAT CLIENT: createHit() call with request: {}", request);
+        EndpointHitCreate hitCreate = EndpointHitCreate.builder()
+                .app(app)
+                .ip(request.getRemoteAddr())
+                .uri(request.getRequestURI())
+                .timestamp(LocalDateTime.now())
+                .build();
 
         ResponseEntity<Void> result = client
                 .post()
                 .uri(makeStatsServerUrl() + "/hit")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(endpointHitCreate)
+                .body(hitCreate)
                 .retrieve()
                 .toEntity(Void.class);
 
@@ -62,8 +72,6 @@ public class StatClientImpl implements StatClient {
             log.warn("STAT CLIENT: createHit() failure with status: {}",
                     result.getStatusCode());
         }
-
-        return result;
     }
 
     public ResponseEntity<List<ViewStats>> getStats(LocalDateTime start,
