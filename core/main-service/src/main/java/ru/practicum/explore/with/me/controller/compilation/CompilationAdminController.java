@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.compilation.CompilationCreateDto;
-import ru.practicum.explore.with.me.model.compilation.CompilationRequestDto;
-import ru.practicum.explore.with.me.model.compilation.CompilationUpdateDto;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationCreateDto;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationUpdateDto;
 import ru.practicum.explore.with.me.service.compilation.CompilationService;
 
 @RestController

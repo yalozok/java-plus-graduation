@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.comment.CommentDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.service.comment.CommentService;
 
 @RestController

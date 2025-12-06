@@ -1,16 +1,10 @@
 package ru.practicum.explore.with.me.service.event;
 
+import ru.practicum.explore.with.me.interaction.api.dto.event.*;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.event.EventStatistics;
-import ru.practicum.explore.with.me.model.event.PublicEventParam;
-import ru.practicum.explore.with.me.model.event.dto.EventFullDto;
-import ru.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateResult;
-import ru.practicum.explore.with.me.model.event.dto.EventShortDto;
-import ru.practicum.explore.with.me.model.event.dto.EventViewsParameters;
-import ru.practicum.explore.with.me.model.event.dto.NewEventDto;
-import ru.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestDto;
+import ru.practicum.explore.with.me.model.event.EventViewsParameters;
+
 
 import java.time.LocalDateTime;
 import java.util.List;

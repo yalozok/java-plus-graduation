@@ -1,7 +1,8 @@
 package ru.practicum.explore.with.me.service.category;
 
-import ru.practicum.explore.with.me.model.category.CategoryDto;
-import ru.practicum.explore.with.me.model.category.NewCategoryDto;
+
+import ru.practicum.explore.with.me.interaction.api.dto.category.CategoryDto;
+import ru.practicum.explore.with.me.interaction.api.dto.category.NewCategoryDto;
 
 import java.util.List;
 

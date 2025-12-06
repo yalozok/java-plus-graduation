@@ -5,14 +5,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.event.EventStatistics;
-import ru.practicum.explore.with.me.model.event.dto.EventFullDto;
-import ru.practicum.explore.with.me.model.event.dto.EventShortDto;
-import ru.practicum.explore.with.me.model.event.dto.NewEventDto;
-import ru.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class, CommentMapper.class})
+@Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class, CommentMapper.class, LocationMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)

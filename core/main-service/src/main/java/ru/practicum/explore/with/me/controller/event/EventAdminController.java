@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.event.AdminEventFilter;
-import ru.practicum.explore.with.me.model.event.dto.AdminEventSearchRequestDto;
-import ru.practicum.explore.with.me.model.event.dto.EventFullDto;
-import ru.practicum.explore.with.me.model.event.dto.UpdateEventAdminRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.AdminEventFilter;
+import ru.practicum.explore.with.me.interaction.api.dto.event.AdminEventSearchRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.UpdateEventAdminRequestDto;
 import ru.practicum.explore.with.me.service.event.EventAdminService;
 
 import java.util.List;

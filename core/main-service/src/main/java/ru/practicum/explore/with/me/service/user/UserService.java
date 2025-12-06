@@ -1,8 +1,9 @@
 package ru.practicum.explore.with.me.service.user;
 
-import ru.practicum.explore.with.me.model.user.AdminUserFindParam;
-import ru.practicum.explore.with.me.model.user.NewUserRequest;
-import ru.practicum.explore.with.me.model.user.UserDto;
+
+import ru.practicum.explore.with.me.interaction.api.dto.user.AdminUserFindParam;
+import ru.practicum.explore.with.me.interaction.api.dto.user.NewUserRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 
 import java.util.List;
 

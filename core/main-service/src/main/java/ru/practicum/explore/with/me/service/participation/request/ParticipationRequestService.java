@@ -1,8 +1,9 @@
 package ru.practicum.explore.with.me.service.participation.request;
 
-import ru.practicum.explore.with.me.model.participation.CancelParticipationRequest;
-import ru.practicum.explore.with.me.model.participation.NewParticipationRequest;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestDto;
+
+import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 
 import java.util.List;
 

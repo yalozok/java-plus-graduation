@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 import ru.practicum.explore.with.me.model.event.Event;
 import ru.practicum.explore.with.me.model.user.User;
 

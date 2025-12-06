@@ -2,11 +2,11 @@ package ru.practicum.explore.with.me.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUpdateDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUserDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CreateUpdateCommentDto;
 import ru.practicum.explore.with.me.model.comment.Comment;
-import ru.practicum.explore.with.me.model.comment.CommentDto;
-import ru.practicum.explore.with.me.model.comment.CommentUpdateDto;
-import ru.practicum.explore.with.me.model.comment.CommentUserDto;
-import ru.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, EventMapper.class})
 public interface CommentMapper {

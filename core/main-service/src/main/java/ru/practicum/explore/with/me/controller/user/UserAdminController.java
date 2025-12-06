@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.user.AdminUserFindParam;
-import ru.practicum.explore.with.me.model.user.NewUserRequest;
-import ru.practicum.explore.with.me.model.user.UserDto;
+import ru.practicum.explore.with.me.interaction.api.dto.user.AdminUserFindParam;
+import ru.practicum.explore.with.me.interaction.api.dto.user.NewUserRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.service.user.UserService;
 
 import java.util.List;
@@ -58,7 +58,7 @@ public class UserAdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto create(@RequestBody
                           @Valid
-                          NewUserRequest newUserRequest,
+                              NewUserRequest newUserRequest,
                           HttpServletRequest request) {
         log.trace("{}: create() call with newUserRequest: {}", controllerName, newUserRequest);
         return service.create(newUserRequest);

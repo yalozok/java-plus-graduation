@@ -2,9 +2,9 @@ package ru.practicum.explore.with.me.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationCreateDto;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationRequestDto;
 import ru.practicum.explore.with.me.model.compilation.Compilation;
-import ru.practicum.explore.with.me.model.compilation.CompilationCreateDto;
-import ru.practicum.explore.with.me.model.compilation.CompilationRequestDto;
 import ru.practicum.explore.with.me.model.event.Event;
 
 import java.util.List;

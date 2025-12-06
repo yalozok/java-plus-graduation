@@ -6,18 +6,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explore.with.me.exception.BadRequestException;
-import ru.practicum.explore.with.me.exception.ConflictException;
-import ru.practicum.explore.with.me.exception.ForbiddenException;
-import ru.practicum.explore.with.me.exception.NotFoundException;
+
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUpdateDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUserDto;
+import ru.practicum.explore.with.me.interaction.api.dto.comment.CreateUpdateCommentDto;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
+import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
+import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
+import ru.practicum.explore.with.me.interaction.api.exception.ForbiddenException;
+import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.mapper.CommentMapper;
 import ru.practicum.explore.with.me.model.comment.Comment;
-import ru.practicum.explore.with.me.model.comment.CommentDto;
-import ru.practicum.explore.with.me.model.comment.CommentUpdateDto;
-import ru.practicum.explore.with.me.model.comment.CommentUserDto;
-import ru.practicum.explore.with.me.model.comment.CreateUpdateCommentDto;
+
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
+
 import ru.practicum.explore.with.me.model.user.User;
 import ru.practicum.explore.with.me.repository.CommentRepository;
 import ru.practicum.explore.with.me.repository.EventRepository;

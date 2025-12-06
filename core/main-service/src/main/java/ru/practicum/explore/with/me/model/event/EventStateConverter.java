@@ -2,6 +2,7 @@ package ru.practicum.explore.with.me.model.event;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 
 @Converter(autoApply = true)
 public class EventStateConverter implements AttributeConverter<EventState, String> {

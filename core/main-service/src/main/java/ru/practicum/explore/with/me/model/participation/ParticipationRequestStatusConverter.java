@@ -3,6 +3,7 @@ package ru.practicum.explore.with.me.model.participation;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 
 @Convert
 public class ParticipationRequestStatusConverter implements AttributeConverter<ParticipationRequestStatus, String> {

@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.participation.CancelParticipationRequest;
-import ru.practicum.explore.with.me.model.participation.NewParticipationRequest;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.service.participation.request.ParticipationRequestService;
 
 import java.util.List;

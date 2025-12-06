@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.model.compilation.CompilationRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationRequestDto;
 import ru.practicum.explore.with.me.service.compilation.CompilationService;
 
 import java.util.List;

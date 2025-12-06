@@ -8,30 +8,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.explore.with.me.exception.BadRequestException;
-import ru.practicum.explore.with.me.exception.ConflictException;
-import ru.practicum.explore.with.me.exception.NotFoundException;
+
+import ru.practicum.explore.with.me.interaction.api.dto.event.*;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
+import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
+import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
+import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.mapper.EventMapper;
+import ru.practicum.explore.with.me.mapper.LocationMapper;
 import ru.practicum.explore.with.me.mapper.ParticipationRequestMapper;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.event.EventPublicSort;
-import ru.practicum.explore.with.me.model.event.EventState;
-import ru.practicum.explore.with.me.model.event.EventStatistics;
-import ru.practicum.explore.with.me.model.event.PublicEventParam;
-import ru.practicum.explore.with.me.model.event.dto.EventFullDto;
-import ru.practicum.explore.with.me.model.event.dto.EventRequestCount;
-import ru.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.explore.with.me.model.event.dto.EventRequestStatusUpdateResult;
-import ru.practicum.explore.with.me.model.event.dto.EventShortDto;
-import ru.practicum.explore.with.me.model.event.dto.EventViewsParameters;
-import ru.practicum.explore.with.me.model.event.dto.NewEventDto;
-import ru.practicum.explore.with.me.model.event.dto.StatusUpdateRequest;
-import ru.practicum.explore.with.me.model.event.dto.UpdateEventUserAction;
-import ru.practicum.explore.with.me.model.event.dto.UpdateEventUserRequest;
+
+import ru.practicum.explore.with.me.model.event.EventViewsParameters;
+import ru.practicum.explore.with.me.model.event.Location;
 import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestDto;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequestStatus;
+
 import ru.practicum.explore.with.me.model.user.User;
 import ru.practicum.explore.with.me.repository.CategoryRepository;
 import ru.practicum.explore.with.me.repository.EventRepository;
@@ -63,6 +56,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final StatsGetter statsGetter;
     private final ParticipationRequestRepository requestRepository;
     private final ParticipationRequestMapper requestMapper;
+    private final LocationMapper locationMapper;
 
     @Transactional
     @Override
@@ -135,7 +129,8 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             event.setEventDate(updateEvent.getEventDate());
         }
         if (updateEvent.getLocation() != null) {
-            event.setLocation(updateEvent.getLocation());
+            Location location = locationMapper.toEntity(updateEvent.getLocation());
+            event.setLocation(location);
         }
         if (updateEvent.getPaid() != null) {
             event.setPaid(updateEvent.getPaid());
