@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.exception;
+package ru.practicum.explore.with.me.interaction.api.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;

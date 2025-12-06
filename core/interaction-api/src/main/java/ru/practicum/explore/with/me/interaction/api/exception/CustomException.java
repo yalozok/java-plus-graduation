@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.exception;
+package ru.practicum.explore.with.me.interaction.api.exception;
 
 import lombok.Getter;
 
