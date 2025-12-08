@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.interaction.api.exception;
+package ru.practicum.gateway;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
