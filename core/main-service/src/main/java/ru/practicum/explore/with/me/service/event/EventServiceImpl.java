@@ -17,7 +17,6 @@ import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
-import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.mapper.EventMapper;
 import ru.practicum.explore.with.me.mapper.LocationMapper;
 import ru.practicum.explore.with.me.mapper.ParticipationRequestMapper;

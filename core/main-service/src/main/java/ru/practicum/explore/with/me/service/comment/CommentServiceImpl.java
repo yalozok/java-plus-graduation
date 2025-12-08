@@ -17,7 +17,6 @@ import ru.practicum.explore.with.me.interaction.api.exception.BadRequestExceptio
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.ForbiddenException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
-import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.mapper.CommentMapper;
 import ru.practicum.explore.with.me.model.comment.Comment;
 

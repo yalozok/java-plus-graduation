@@ -101,11 +101,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequestDto cancel(CancelParticipationRequest cancelParticipationRequest) {
         ParticipationRequest request = participationRequestRepository
                 .findById(cancelParticipationRequest.getRequestId())
-                .orElseThrow(() -> {
-                    return new NotFoundException("The required object was not found.",
+                .orElseThrow(() -> new NotFoundException("The required object was not found.",
                             "ParticipationRequest with id=" + cancelParticipationRequest.getRequestId() +
-                                    " was not found");
-                });
+                                    " was not found"));
+
         userClient.findById(cancelParticipationRequest.getUserId());
         if (request.getRequesterId() != cancelParticipationRequest.getUserId()) {
             throw new ConflictException("Request can be cancelled only by an owner",

@@ -13,6 +13,6 @@ public class CommentUpdateDto {
     private CommentEventDto eventDto;
     private LocalDateTime updatedOn;
 
-    public static record CommentEventDto(long id, String title) {
+    public record CommentEventDto(long id, String title) {
     }
 }

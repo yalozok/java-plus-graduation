@@ -19,7 +19,6 @@ import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
 import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)

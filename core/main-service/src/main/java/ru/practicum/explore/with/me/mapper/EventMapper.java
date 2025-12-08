@@ -6,7 +6,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
-import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.model.event.Event;
 
