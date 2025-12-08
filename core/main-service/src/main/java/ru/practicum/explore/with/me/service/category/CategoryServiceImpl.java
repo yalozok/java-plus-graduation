@@ -15,8 +15,8 @@ import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.mapper.CategoryMapper;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.repository.CategoryRepository;
-import ru.practicum.explore.with.me.util.DataProvider;
-import ru.practicum.explore.with.me.util.ExistenceValidator;
+import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
+import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.util.List;
 
