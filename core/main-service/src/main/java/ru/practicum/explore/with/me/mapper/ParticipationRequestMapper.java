@@ -10,6 +10,5 @@ import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
 public interface ParticipationRequestMapper {
 
     @Mapping(target = "event", source = "event.id")
-    @Mapping(target = "requester", source = "requester.id")
     ParticipationRequestDto toDto(ParticipationRequest entity);
 }

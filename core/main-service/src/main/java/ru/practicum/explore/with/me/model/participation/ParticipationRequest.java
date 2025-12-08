@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.user.User;
 
 import java.time.LocalDateTime;
 
@@ -39,9 +38,8 @@ public class ParticipationRequest {
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requester_id")
-    private User requester;
+    @Column(name = "requester_id")
+    private long requesterId;
 
     @Convert(converter = ParticipationRequestStatusConverter.class)
     private ParticipationRequestStatus status;
