@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.user.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,9 +15,9 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
             SELECT DISTINCT e FROM Event e
-            WHERE e.initiator = :user
+            WHERE e.initiatorId = :userId
             """)
-    Page<Event> findEventsByUser(@Param("user") User user,
+    Page<Event> findEventsByUser(@Param("userId") long userId,
                                  Pageable pageable);
 
     Optional<Event> findByIdAndState(Long id, EventState state);
@@ -48,7 +47,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
              SELECT e
              FROM Event e
-             WHERE (:users      IS NULL OR e.initiator.id IN :users)
+             WHERE (:users      IS NULL OR e.initiatorId IN :users)
                AND (:states     IS NULL OR e.state IN :states)
                AND (:categories IS NULL OR e.category.id IN :categories)
                AND (e.eventDate >= COALESCE(:rangeStart, e.eventDate))

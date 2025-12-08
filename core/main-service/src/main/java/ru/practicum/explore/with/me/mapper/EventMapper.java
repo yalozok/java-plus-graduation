@@ -6,23 +6,27 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.model.event.Event;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class, CommentMapper.class, LocationMapper.class})
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class, CommentMapper.class, LocationMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
+    @Mapping(target = "initiator", ignore = true)
     EventFullDto toFullDto(Event event);
 
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
+    @Mapping(target = "initiator", ignore = true)
     EventShortDto toShortDto(Event event);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "publishedOn", ignore = true)
     @Mapping(target = "state", ignore = true)
-    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "comments", ignore = true)
     Event toModel(NewEventDto eventDto);
@@ -31,17 +35,19 @@ public interface EventMapper {
     @Mapping(target = "category", ignore = true)
     void updateFromAdmin(UpdateEventAdminRequestDto dto, @MappingTarget Event event);
 
-    default EventFullDto toFullDtoWithStats(Event event, EventStatistics stats) {
+    default EventFullDto toFullDtoWithStats(Event event, EventStatistics stats, UserShortDto user) {
         EventFullDto dto = toFullDto(event);
         dto.setViews(stats.getViews(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
+        dto.setInitiator(user);
         return dto;
     }
 
-    default EventShortDto toShortDtoWithStats(Event event, EventStatistics stats) {
+    default EventShortDto toShortDtoWithStats(Event event, EventStatistics stats, UserShortDto user) {
         EventShortDto dto = toShortDto(event);
         dto.setViews(stats.getViews(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
+        dto.setInitiator(user);
         return dto;
     }
 }

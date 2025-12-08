@@ -22,7 +22,6 @@ import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.comment.Comment;
 import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.practicum.explore.with.me.model.user.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -72,9 +71,8 @@ public class Event {
     @Column(name = "title", length = 120)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id")
-    private User initiator;
+    @Column(name = "initiator_id")
+    private long initiatorId;
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;
