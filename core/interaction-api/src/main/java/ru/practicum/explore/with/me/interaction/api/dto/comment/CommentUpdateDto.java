@@ -1,6 +1,7 @@
 package ru.practicum.explore.with.me.interaction.api.dto.comment;
 
 import lombok.Data;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;
 
@@ -8,12 +9,9 @@ import java.time.LocalDateTime;
 public class CommentUpdateDto {
     private long id;
     private String text;
-    private CommentAuthorDto authorDto;
+    private UserShortDto authorDto;
     private CommentEventDto eventDto;
     private LocalDateTime updatedOn;
-
-    public static record CommentAuthorDto(long id, String name) {
-    }
 
     public static record CommentEventDto(long id, String title) {
     }

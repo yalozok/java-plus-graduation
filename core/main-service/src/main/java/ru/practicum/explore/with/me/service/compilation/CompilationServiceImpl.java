@@ -17,7 +17,7 @@ import ru.practicum.explore.with.me.model.compilation.Compilation;
 import ru.practicum.explore.with.me.model.event.Event;
 import ru.practicum.explore.with.me.repository.CompilationRepository;
 import ru.practicum.explore.with.me.repository.EventRepository;
-import ru.practicum.explore.with.me.util.ExistenceValidator;
+import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.util.Collections;
 import java.util.List;
