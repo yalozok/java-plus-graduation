@@ -1,7 +1,6 @@
-package ru.practicum.explore.with.me.service.user;
+package ru.practicum.explore.with.me.user.service.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -12,23 +11,24 @@ import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
-import ru.practicum.explore.with.me.mapper.UserMapper;
-import ru.practicum.explore.with.me.model.user.User;
-import ru.practicum.explore.with.me.repository.UserRepository;
-import ru.practicum.explore.with.me.util.DataProvider;
-import ru.practicum.explore.with.me.util.ExistenceValidator;
+import ru.practicum.explore.with.me.logging.Loggable;
+import ru.practicum.explore.with.me.user.service.model.UserMapper;
+import ru.practicum.explore.with.me.user.service.model.User;
+import ru.practicum.explore.with.me.user.service.model.UserRepository;
+import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
+import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserServiceImpl implements UserService, ExistenceValidator<User>, DataProvider<UserShortDto, User> {
-    private final String className = this.getClass().getSimpleName();
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Override
+    @Loggable
     public List<UserDto> find(AdminUserFindParam param) {
         List<UserDto> result;
 
@@ -42,25 +42,33 @@ public class UserServiceImpl implements UserService, ExistenceValidator<User>, D
                     .map(this::mapUserDto)
                     .toList();
         }
-
-        log.info("{}: result of find(): {}", className, result);
         return result;
+    }
+
+    @Loggable
+    @Override
+    public UserShortDto findById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                "The required object was not found.",
+                "User with id=" + id + " was not found"
+        ));
+
+        return new UserShortDto(user.getId(), user.getName());
     }
 
     @Transactional
     @Override
+    @Loggable
     public UserDto create(NewUserRequest newUserRequest) {
         validateEmailUnique(newUserRequest.getEmail());
-        UserDto result = mapUserDto(userRepository.save(mapEntity(newUserRequest)));
-        log.info("{}: result of create():: {}", className, result);
-        return result;
+        return mapUserDto(userRepository.save(mapEntity(newUserRequest)));
     }
 
     @Transactional
     @Override
+    @Loggable
     public void delete(Long userId) {
         userRepository.deleteById(userId);
-        log.info("{}: user with id: {} has been deleted ", className, userId);
     }
 
     private User mapEntity(NewUserRequest newUserRequest) {
@@ -77,17 +85,17 @@ public class UserServiceImpl implements UserService, ExistenceValidator<User>, D
     }
 
     @Override
+    @Loggable
     public void validateExists(Long id) {
         if (userRepository.findById(id).isEmpty()) {
-            log.info("{}: attempt to find user with id: {}", className, id);
             throw new NotFoundException("The required object was not found.",
                     "User with id=" + id + " was not found");
         }
     }
 
+    @Loggable
     private void validateEmailUnique(String email) {
         if (userRepository.isExistsEmail(email)) {
-            log.info("{}: user with email {} already exists", className, email);
             throw new ConflictException("The email of user should be unique.",
                     "User with email=" + email + " is already exist");
         }

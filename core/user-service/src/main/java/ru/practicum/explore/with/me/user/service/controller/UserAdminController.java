@@ -1,13 +1,12 @@
-package ru.practicum.explore.with.me.controller.user;
+package ru.practicum.explore.with.me.user.service.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,12 +15,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.explore.with.me.interaction.api.contract.UserOperations;
 import ru.practicum.explore.with.me.interaction.api.dto.user.AdminUserFindParam;
 import ru.practicum.explore.with.me.interaction.api.dto.user.NewUserRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
-import ru.practicum.explore.with.me.service.user.UserService;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
+import ru.practicum.explore.with.me.logging.Loggable;
+import ru.practicum.explore.with.me.user.service.service.UserService;
 
 import java.util.List;
 
@@ -30,11 +31,12 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 @Validated
-public class UserAdminController {
+public class UserAdminController implements UserOperations {
     private final UserService service;
-    private final String controllerName = this.getClass().getSimpleName();
 
     @GetMapping
+    @Override
+    @Loggable
     public List<UserDto> find(@RequestParam(required = false)
                               List<Long> ids,
                               @RequestParam(defaultValue = "0")
@@ -42,10 +44,7 @@ public class UserAdminController {
                               int from,
                               @RequestParam(defaultValue = "10")
                               @Positive(message = "must be positive")
-                              int size,
-                              HttpServletRequest request) {
-        log.trace("{}: find() call with ids: {}, from: {}, size: {}", controllerName, ids, from, size);
-
+                              int size) {
         AdminUserFindParam param = AdminUserFindParam.builder()
                 .ids(ids)
                 .from(from)
@@ -55,23 +54,27 @@ public class UserAdminController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
+    @Override
+    @Loggable
     public UserDto create(@RequestBody
                           @Valid
-                              NewUserRequest newUserRequest,
-                          HttpServletRequest request) {
-        log.trace("{}: create() call with newUserRequest: {}", controllerName, newUserRequest);
+                          NewUserRequest newUserRequest) {
         return service.create(newUserRequest);
     }
 
     @DeleteMapping("/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Override
+    @Loggable
     public void delete(@PathVariable
                        @Positive(message = "must be positive")
-                       Long userId,
-                       HttpServletRequest request) {
-        log.trace("{}: delete() call with userId: {}", controllerName, userId);
+                       Long userId) {
         service.delete(userId);
     }
 
+    @GetMapping("/{id}")
+    @Override
+    @Loggable
+    public UserShortDto findById(@PathVariable Long id) {
+        return service.findById(id);
+    }
 }
