@@ -5,6 +5,6 @@ import ru.practicum.explore.with.me.interaction.api.contract.UserOperations;
 
 @FeignClient(name = "user-service",
         path = "/admin/users",
-        configuration = FeignConfig.class)
+        configuration = UserFeignConfig.class)
 public interface UserClient extends UserOperations {
 }
