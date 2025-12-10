@@ -10,7 +10,6 @@ import ru.practicum.explore.with.me.model.event.Event;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
@@ -20,7 +19,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Page<Event> findEventsByUser(@Param("userId") long userId,
                                  Pageable pageable);
 
-    Optional<Event> findByIdAndState(Long id, EventState state);
+    //Optional<Event> findByIdAndState(Long id, EventState state);
 
     @Query("""
             SELECT e FROM Event AS e

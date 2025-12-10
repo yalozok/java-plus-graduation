@@ -21,7 +21,6 @@ import lombok.Setter;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.comment.Comment;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -76,7 +75,4 @@ public class Event {
 
     @Convert(converter = EventStateConverter.class)
     private EventState state;
-
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ParticipationRequest> requests = new ArrayList<>();
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.practicum.explore.with.me.interaction.api.client.request.RequestClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
@@ -19,16 +20,13 @@ import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.mapper.EventMapper;
 import ru.practicum.explore.with.me.mapper.LocationMapper;
-import ru.practicum.explore.with.me.mapper.ParticipationRequestMapper;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.event.Event;
 import ru.practicum.explore.with.me.model.event.EventViewsParameters;
 import ru.practicum.explore.with.me.model.event.Location;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
 
 import ru.practicum.explore.with.me.repository.CategoryRepository;
 import ru.practicum.explore.with.me.repository.EventRepository;
-import ru.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 import ru.practicum.explore.with.me.util.StatsGetter;
 import ru.practicum.stats.dto.ViewStats;
@@ -50,8 +48,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
-    private final ParticipationRequestRepository requestRepository;
-    private final ParticipationRequestMapper requestMapper;
+    private final RequestClient requestClient;
     private final LocationMapper locationMapper;
 
     @Transactional
@@ -72,11 +69,43 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return eventFullDto;
     }
 
+    private Event getEventById(long eventId) {
+        return eventRepository.findById(eventId).orElseThrow(
+                () -> new NotFoundException("The required object was not found.",
+                        "Event with id=" + eventId + " was not found"));
+    }
+
+    private EventFullDto toEventFullDto(Event event) {
+        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        EventStatistics stats = getEventStatistics(List.of(event), startStats, endStats);
+        UserShortDto userDto = userClient.findById(event.getInitiatorId());
+        return eventMapper.toFullDtoWithStats(event, stats, userDto);
+    }
+
+    private Event getEventIfInitiatedByUser(long userId, long eventId) {
+        userClient.findById(userId);
+        Event event = getEventById(eventId);
+
+        if (event.getInitiatorId() != userId) {
+            throw new ConflictException("For the requested operation the conditions are not met.",
+                    "Only initiator of event can can manipulate with it");
+        }
+        return event;
+    }
+
     @Override
     @Transactional(readOnly = true)
     public EventFullDto getPrivateEventById(long userId, long eventId) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
-        return getEventFullDto(userId, event);
+        return toEventFullDto(event);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EventFullDto getEventFullDto(long eventId) {
+        Event event = getEventById(eventId);
+        return toEventFullDto(event);
     }
 
     @Transactional
@@ -129,7 +158,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             event.setRequestModeration(updateEvent.getRequestModeration());
         }
         eventRepository.save(event);
-        return getEventFullDto(userId, event);
+        return toEventFullDto(event);
     }
 
     @Override
@@ -153,8 +182,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventParticipationRequestsByUser(long userId, long eventId) {
         getEventIfInitiatedByUser(userId, eventId);
-        List<ParticipationRequest> requestsByEventId = requestRepository.findAllByEventId(eventId);
-        return requestsByEventId.stream().map(requestMapper::toDto).toList();
+        return requestClient.findAllByEventId(eventId);
     }
 
     @Override
@@ -162,14 +190,13 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     public EventRequestStatusUpdateResult updateEventRequestStatus(long userId, long eventId,
                                                                    EventRequestStatusUpdateRequest updateRequest) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
-        List<ParticipationRequest> requestsByEventId = requestRepository.findAllById(updateRequest.getRequestIds());
+        List<ParticipationRequestDto> requestsByEventId = requestClient.findAllByIds(updateRequest.getRequestIds());
 
         if (event.getParticipantLimit() == 0 || !event.isRequestModeration()) {
-            return new EventRequestStatusUpdateResult(
-                    requestsByEventId.stream().map(requestMapper::toDto).toList(), List.of());
+            return new EventRequestStatusUpdateResult(requestsByEventId, List.of());
         }
 
-        List<ParticipationRequest> alreadyConfirmed = requestRepository
+        List<ParticipationRequestDto> alreadyConfirmed = requestClient
                 .findAllByEventIdAndStatus(eventId, ParticipationRequestStatus.CONFIRMED);
         AtomicInteger remainingSpots = new AtomicInteger(event.getParticipantLimit() - alreadyConfirmed.size());
 
@@ -189,32 +216,34 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         List<ParticipationRequestDto> rejectedDto = new ArrayList<>();
 
         requestsByEventId.forEach(request -> {
-            if (remainingSpots.get() > 0 && updateRequest.getStatus() == StatusUpdateRequest.CONFIRMED) {
+            if (remainingSpots.get() > 0 && updateRequest.getStatus() == ParticipationRequestStatus.CONFIRMED) {
                 request.setStatus(ParticipationRequestStatus.CONFIRMED);
-                confirmedDto.add(requestMapper.toDto(request));
+                confirmedDto.add(request);
                 remainingSpots.getAndDecrement();
             } else {
                 request.setStatus(ParticipationRequestStatus.REJECTED);
-                rejectedDto.add(requestMapper.toDto(request));
+                rejectedDto.add(request);
             }
         });
 
         if (!confirmedDto.isEmpty()) {
-            requestRepository.updateStatus(
+            requestClient.updateStatus(
+                    new EventRequestStatusUpdateRequest(
                     confirmedDto.stream().map(ParticipationRequestDto::getId).toList(),
-                    ParticipationRequestStatus.CONFIRMED);
+                    ParticipationRequestStatus.CONFIRMED));
         }
         if (!rejectedDto.isEmpty()) {
-            requestRepository.updateStatus(
+            requestClient.updateStatus(
+                    new EventRequestStatusUpdateRequest(
                     rejectedDto.stream().map(ParticipationRequestDto::getId).toList(),
-                    ParticipationRequestStatus.REJECTED);
+                    ParticipationRequestStatus.REJECTED));
         }
         if (remainingSpots.get() == 0) {
-            List<Long> pendingIds = requestRepository
+            List<Long> pendingIds = requestClient
                     .findAllByEventIdAndStatus(eventId, ParticipationRequestStatus.PENDING)
-                    .stream().map(ParticipationRequest::getId).toList();
+                    .stream().map(ParticipationRequestDto::getId).toList();
             if (!pendingIds.isEmpty()) {
-                requestRepository.updateStatus(pendingIds, ParticipationRequestStatus.REJECTED);
+                requestClient.updateStatus(new EventRequestStatusUpdateRequest(pendingIds, ParticipationRequestStatus.REJECTED));
             }
         }
         return new EventRequestStatusUpdateResult(confirmedDto, rejectedDto);
@@ -222,15 +251,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Transactional(readOnly = true)
     public EventFullDto getPublicEventById(long eventId) {
-        Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("The required object was not found.",
-                        "Event with id=" + eventId + " was not found"));
-        List<Event> events = List.of(event);
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
-        UserShortDto userDto = userClient.findById(event.getInitiatorId());
-        return eventMapper.toFullDtoWithStats(event, stats, userDto);
+        Event event = getEventById(eventId);
+        if(event.getState() != EventState.PUBLISHED) {
+            throw new NotFoundException("The required object was not found.",
+                    "Event with id=" + eventId + " was not found");
+        }
+        return toEventFullDto(event);
     }
 
     @Override
@@ -301,25 +327,13 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
     @Override
     public Map<Long, Integer> getConfirmedRequests(List<Long> eventIds) {
-        List<EventRequestCount> confirmedRequests = requestRepository.countGroupByEventId(eventIds);
+        List<EventRequestCount> confirmedRequests = requestClient.getRequestsCountByEventId(eventIds);
         return confirmedRequests.stream().collect(
                 Collectors.toMap(
                         EventRequestCount::eventId,
                         r -> r.count().intValue()
                 )
         );
-    }
-
-    private Event getEventIfInitiatedByUser(long userId, long eventId) {
-        userClient.findById(userId);
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
-                new NotFoundException("The required object was not found.", "Event with id=" + eventId + " was not found"));
-
-        if (event.getInitiatorId() != userId) {
-            throw new ConflictException("For the requested operation the conditions are not met.",
-                    "Only initiator of event can can manipulate with it");
-        }
-        return event;
     }
 
     private Category findCategoryByIdOrElseThrow(long categoryId) {
@@ -365,13 +379,5 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         Map<Long, Long> viewStats = getEventViews(params);
         Map<Long, Integer> confirmedRequests = getConfirmedRequests(eventIds);
         return new EventStatistics(viewStats, confirmedRequests);
-    }
-
-    private EventFullDto getEventFullDto(long userId, Event event) {
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(List.of(event), startStats, endStats);
-        UserShortDto userDto = userClient.findById(userId);
-        return eventMapper.toFullDtoWithStats(event, stats, userDto);
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
+import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.service.comment.CommentService;
 import ru.practicum.explore.with.me.service.event.EventService;
 import ru.practicum.stats.client.StatClient;
@@ -39,7 +40,6 @@ public class EventPublicController {
     private final String className = this.getClass().getSimpleName();
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
                                          @RequestParam(required = false) List<Long> categories,
                                          @RequestParam(required = false) Boolean paid,
@@ -68,7 +68,6 @@ public class EventPublicController {
     }
 
     @GetMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                      HttpServletRequest request) {
         statClient.createHit(request);
@@ -77,12 +76,17 @@ public class EventPublicController {
     }
 
     @GetMapping("/{eventId}/comments")
-    @ResponseStatus(HttpStatus.OK)
     public List<CommentDto> getCommentsByEvent(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                                @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                @RequestParam(defaultValue = "10") @Positive int size) {
         log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
                 className, eventId, from, size);
         return commentService.getCommentsByEvent(eventId, PageRequest.of(from / size, size));
+    }
+
+    @GetMapping("/internal/{eventId}")
+    @Loggable
+    public EventFullDto getEventById(@PathVariable("eventId") long eventId) {
+        return eventsService.getEventFullDto(eventId);
     }
 }
