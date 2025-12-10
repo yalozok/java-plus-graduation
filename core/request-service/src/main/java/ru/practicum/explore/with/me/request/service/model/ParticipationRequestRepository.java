@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.repository;
+package ru.practicum.explore.with.me.request.service.model;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
 
 import java.util.List;
 
@@ -24,11 +23,11 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     int countByEventId(Long eventId);
 
     @Query("""
-                SELECT new ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount(r.event.id, COUNT(r))
+                SELECT new ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount(r.eventId, COUNT(r))
                     FROM ParticipationRequest r
-                    WHERE r.event.id IN :eventIds
+                    WHERE r.eventId IN :eventIds
                     AND r.status = 'confirmed'
-                    GROUP BY r.event.id
+                    GROUP BY r.eventId
             """)
     List<EventRequestCount> countGroupByEventId(@Param("eventIds") List<Long> eventIds);
 

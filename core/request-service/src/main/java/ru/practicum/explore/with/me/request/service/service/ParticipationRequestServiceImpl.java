@@ -1,22 +1,24 @@
-package ru.practicum.explore.with.me.service.participation.request;
+package ru.practicum.explore.with.me.request.service.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.explore.with.me.interaction.api.client.event.EventClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
-import ru.practicum.explore.with.me.logging.Loggable;
-import ru.practicum.explore.with.me.mapper.ParticipationRequestMapper;
-import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.participation.ParticipationRequest;
-import ru.practicum.explore.with.me.repository.EventRepository;
-import ru.practicum.explore.with.me.repository.ParticipationRequestRepository;
+import ru.practicum.explore.with.me.request.service.model.ParticipationRequestMapper;
+import ru.practicum.explore.with.me.request.service.model.ParticipationRequest;
+import ru.practicum.explore.with.me.request.service.model.ParticipationRequestRepository;
 import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
 import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
@@ -31,16 +33,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     private final ParticipationRequestRepository participationRequestRepository;
     private final UserClient userClient;
-    private final EventRepository eventRepository;
-    private final ExistenceValidator<Event> eventExistenceValidator;
+    private final EventClient eventClient;
     private final ParticipationRequestMapper participationRequestMapper;
 
 
     @Override
-    @Loggable
     public List<ParticipationRequestDto> find(Long userId) {
         userClient.findById(userId);
-
         return participationRequestRepository.findAllByRequesterId(userId).stream()
                 .map(this::getDto)
                 .toList();
@@ -48,7 +47,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     @Transactional
-    @Loggable
     public ParticipationRequestDto create(NewParticipationRequest newParticipationRequest) {
         Long requesterId = newParticipationRequest.getUserId();
         Long eventId = newParticipationRequest.getEventId();
@@ -59,22 +57,18 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     ", and eventId: " + eventId + " already exists");
         }
 
-        eventExistenceValidator.validateExists(eventId);
-        userClient.findById(requesterId);
-
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException(
-                "Not found object",
-                "There's no event with this id: " + eventId
-        ));
-
-        if (event.getInitiatorId() == requesterId) {
-            throw new ConflictException("Initiator can't create participation request.", "requesterId: "
-                    + requesterId + " equals to initiatorId: " + event.getInitiatorId());
-        }
+        EventFullDto event = eventClient.getEventById(eventId);
 
         if (event.getPublishedOn() == null) {
             throw new ConflictException("Can't create participation request for unpublished event.",
                     "event with id: " + eventId + " is not published yet");
+        }
+
+        userClient.findById(requesterId);
+
+        if (event.getInitiator().getId().equals(requesterId)) {
+            throw new ConflictException("Initiator can't create participation request.", "requesterId: "
+                    + requesterId + " equals to initiatorId: " + event.getInitiator().getId());
         }
 
         if (event.getParticipantLimit() != 0) {
@@ -97,7 +91,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     @Transactional
-    @Loggable
     public ParticipationRequestDto cancel(CancelParticipationRequest cancelParticipationRequest) {
         ParticipationRequest request = participationRequestRepository
                 .findById(cancelParticipationRequest.getRequestId())
@@ -123,13 +116,12 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Long userId = newParticipationRequest.getUserId();
         Long eventId = newParticipationRequest.getEventId();
         userClient.findById(userId);
+        eventClient.getEventById(eventId);
 
         return ParticipationRequest.builder()
                 .created(LocalDateTime.now())
                 .requesterId(userId)
-                .event(eventRepository.findById(eventId).orElseThrow(() ->
-                        new NotFoundException("The required object was not found.",
-                                "Event with id=" + eventId + " was not found")))
+                .eventId(eventId)
                 .status(ParticipationRequestStatus.PENDING)
                 .build();
     }
@@ -140,7 +132,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
-    @Loggable
     public void validateExists(Long id) {
         if (participationRequestRepository.findById(id).isEmpty()) {
             throw new NotFoundException("The required object was not found.",
@@ -157,5 +148,38 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                         eventId,
                         ParticipationRequestStatus.CONFIRMED
                 );
+    }
+
+    @Override
+    public List<ParticipationRequestDto> findAllByIds(List<Long> requestIds) {
+        List<ParticipationRequest> requests = participationRequestRepository.findAllById(requestIds);
+        return requests.stream().map(participationRequestMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ParticipationRequestDto> findAllByEventId(long eventId){
+        List<ParticipationRequest> requests = participationRequestRepository.findAllByEventId(eventId);
+        return requests.stream().map(participationRequestMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ParticipationRequestDto> findAllByEventIdAndStatus(long eventId,
+                                                            ParticipationRequestStatus status) {
+        List<ParticipationRequest> requests = participationRequestRepository
+                .findAllByEventIdAndStatus(eventId, status);
+        return requests.stream().map(participationRequestMapper::toDto).toList();
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(EventRequestStatusUpdateRequest updateRequest){
+        participationRequestRepository.updateStatus(
+                updateRequest.getRequestIds(),
+                updateRequest.getStatus());
+    }
+
+    @Override
+    public List<EventRequestCount> getRequestsCountByEventId(List<Long> eventIds) {
+        return participationRequestRepository.countGroupByEventId(eventIds);
     }
 }

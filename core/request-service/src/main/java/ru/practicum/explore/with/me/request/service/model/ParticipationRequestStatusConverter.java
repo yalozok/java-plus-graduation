@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.model.participation;
+package ru.practicum.explore.with.me.request.service.model;
 
 
 import jakarta.persistence.AttributeConverter;

@@ -1,9 +1,8 @@
-package ru.practicum.explore.with.me.controller.participation.request;
+package ru.practicum.explore.with.me.request.service.controller;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -18,30 +17,30 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
-import ru.practicum.explore.with.me.service.participation.request.ParticipationRequestService;
+import ru.practicum.explore.with.me.logging.Loggable;
+import ru.practicum.explore.with.me.request.service.service.ParticipationRequestService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/users/{userId}/requests")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Slf4j
 @Validated
 public class ParticipationRequestPrivateController {
     private final ParticipationRequestService service;
-    private final String controllerName = this.getClass().getSimpleName();
 
     @GetMapping
+    @Loggable
     public List<ParticipationRequestDto> find(@PathVariable
                                               @NotNull(message = "must not be null")
                                               @PositiveOrZero(message = "must be positive or zero")
                                               Long userId) {
-        log.trace("{}: find() call with userId: {}", controllerName, userId);
         return service.find(userId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Loggable
     public ParticipationRequestDto create(@PathVariable
                                           @NotNull(message = "must not be null")
                                           @PositiveOrZero(message = "must be positive or zero")
@@ -50,8 +49,6 @@ public class ParticipationRequestPrivateController {
                                           @NotNull(message = "must not be null")
                                           @PositiveOrZero(message = "must be positive or zero")
                                           Long eventId) {
-        log.trace("{}: create() call with userId: {}, eventId: {}", controllerName, userId, eventId);
-
         NewParticipationRequest newParticipationRequest = NewParticipationRequest.builder()
                 .userId(userId)
                 .eventId(eventId)
@@ -60,6 +57,7 @@ public class ParticipationRequestPrivateController {
     }
 
     @PatchMapping("/{requestId}/cancel")
+    @Loggable
     public ParticipationRequestDto cancel(@PathVariable
                                           @NotNull(message = "must not be null")
                                           @PositiveOrZero(message = "must be positive or zero")
@@ -68,8 +66,6 @@ public class ParticipationRequestPrivateController {
                                           @NotNull(message = "must not be null")
                                           @PositiveOrZero(message = "must be positive or zero")
                                           Long requestId) {
-        log.trace("{}: cancel() call with userId: {}, requestId: {}", controllerName, userId, requestId);
-
         CancelParticipationRequest cancelParticipationRequest = CancelParticipationRequest.builder()
                 .userId(userId)
                 .requestId(requestId)
