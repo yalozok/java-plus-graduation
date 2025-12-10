@@ -6,12 +6,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.practicum.explore.with.me.interaction.api.client.request.RequestClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUpdateDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CreateUpdateCommentDto;
-import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
@@ -24,7 +24,6 @@ import ru.practicum.explore.with.me.model.event.Event;
 
 import ru.practicum.explore.with.me.repository.CommentRepository;
 import ru.practicum.explore.with.me.repository.EventRepository;
-import ru.practicum.explore.with.me.repository.ParticipationRequestRepository;
 import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
@@ -41,7 +40,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     private final CommentRepository commentRepository;
     private final UserClient userClient;
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository requestRepository;
+    private final RequestClient requestClient;
     private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;
 
@@ -79,12 +78,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
             throw new ConflictException(CONDITIONS_NOT_MET, "Only past events can be commented on");
         }
 
-        if (!requestRepository
-                .existsByRequesterIdAndEventIdAndStatus(
-                        userId,
-                        eventId,
-                        ParticipationRequestStatus.CONFIRMED
-                )) {
+        if (!requestClient.isParticipantApproved(userId, eventId)) {
             throw new ConflictException(CONDITIONS_NOT_MET, "Only events the user participated in can be commented on");
         }
 
