@@ -23,7 +23,6 @@ import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.comment.Comment;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity

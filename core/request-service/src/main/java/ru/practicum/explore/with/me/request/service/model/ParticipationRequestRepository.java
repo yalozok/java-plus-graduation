@@ -20,8 +20,6 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
                                                    Long eventId,
                                                    ParticipationRequestStatus status);
 
-    int countByEventId(Long eventId);
-
     @Query("""
                 SELECT new ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount(r.eventId, COUNT(r))
                     FROM ParticipationRequest r
