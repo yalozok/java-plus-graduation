@@ -25,3 +25,12 @@ services:
       POSTGRES_PASSWORD: users
     ports:
       - "6544:5432"
+
+  requests-db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm_requests
+      POSTGRES_USER: requests
+      POSTGRES_PASSWORD: requests
+    ports:
+      - "6545:5432"
