@@ -10,9 +10,9 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6543/ewm
-    username: main
-    password: main
+    url: jdbc:postgresql://localhost:6543/ewm_event
+    username: event
+    password: event
 
   jpa:
     defer-datasource-initialization: true

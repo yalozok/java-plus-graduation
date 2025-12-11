@@ -27,7 +27,7 @@ spring:
             - Path=/admin/comments/**
 
         - id: main_service_route
-          uri: lb://main-service
+          uri: lb://event-service
           predicates:
             - Path=/**
 management:

@@ -13,8 +13,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
         "ru.practicum.explore.with.me.interaction.api.client"
 })
 @EnableAspectJAutoProxy
-public class MainApp {
+public class EventApp {
     public static void main(String[] args) {
-        SpringApplication.run(MainApp.class, args);
+        SpringApplication.run(EventApp.class, args);
     }
 }
