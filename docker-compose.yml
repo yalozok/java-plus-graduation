@@ -34,3 +34,12 @@ services:
       POSTGRES_PASSWORD: requests
     ports:
       - "6545:5432"
+
+  comments-db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm_comments
+      POSTGRES_USER: comments
+      POSTGRES_PASSWORD: comments
+    ports:
+      - "6546:5432"
