@@ -6,16 +6,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.explore.with.me.interaction.api.contract.UserOperations;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.with.me.interaction.api.dto.user.AdminUserFindParam;
 import ru.practicum.explore.with.me.interaction.api.dto.user.NewUserRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
@@ -30,11 +23,10 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
 @Validated
-public class UserAdminController implements UserOperations {
+public class UserAdminController {
     private final UserService service;
 
     @GetMapping
-    @Override
     @Loggable
     public List<UserDto> find(@RequestParam(required = false)
                               List<Long> ids,
@@ -53,8 +45,8 @@ public class UserAdminController implements UserOperations {
     }
 
     @PostMapping
-    @Override
     @Loggable
+    @ResponseStatus(HttpStatus.CREATED)
     public UserDto create(@RequestBody
                           @Valid
                           NewUserRequest newUserRequest) {
@@ -62,7 +54,6 @@ public class UserAdminController implements UserOperations {
     }
 
     @DeleteMapping("/{userId}")
-    @Override
     @Loggable
     public void delete(@PathVariable
                        @Positive(message = "must be positive")
@@ -71,7 +62,6 @@ public class UserAdminController implements UserOperations {
     }
 
     @GetMapping("/{id}")
-    @Override
     @Loggable
     public UserShortDto findById(@PathVariable Long id) {
         return service.findById(id);
