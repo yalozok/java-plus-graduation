@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.service.comment;
+package ru.practicum.explore.with.me.comment.service.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -6,28 +6,31 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import ru.practicum.explore.with.me.interaction.api.client.event.EventClient;
 import ru.practicum.explore.with.me.interaction.api.client.request.RequestClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUpdateDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CreateUpdateCommentDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
+import ru.practicum.explore.with.me.interaction.api.dto.event.EventShortDto;
+import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.ForbiddenException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
-import ru.practicum.explore.with.me.mapper.CommentMapper;
-import ru.practicum.explore.with.me.model.comment.Comment;
-
-import ru.practicum.explore.with.me.model.event.Event;
-
-import ru.practicum.explore.with.me.repository.CommentRepository;
-import ru.practicum.explore.with.me.repository.EventRepository;
+import ru.practicum.explore.with.me.comment.service.model.CommentMapper;
+import ru.practicum.explore.with.me.comment.service.model.Comment;
+import ru.practicum.explore.with.me.comment.service.model.CommentRepository;
 import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,21 +42,23 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     private final CommentRepository commentRepository;
     private final UserClient userClient;
-    private final EventRepository eventRepository;
+    private final EventClient eventClient;
     private final RequestClient requestClient;
-    private final ExistenceValidator<Event> eventExistenceValidator;
     private final CommentMapper mapper;
 
 
     // admin
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, readOnly = true)
     public CommentDto getCommentById(Long id) {
         Comment comment = getOrThrow(id);
         CommentDto result = mapper.toDto(comment);
         UserShortDto userDto = userClient.findById(comment.getAuthorId());
         result.setAuthorDto(userDto);
+
+        EventFullDto event = eventClient.getEventById(comment.getEventId());
+        result.setEventDto(new CommentDto.CommentEventDto(event.getId(), event.getTitle()));
         return result;
     }
 
@@ -69,10 +74,8 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     public CommentDto createComment(Long userId, Long eventId, CreateUpdateCommentDto dto) {
         validateText(dto.getText(), 100);
 
-        userClient.findById(userId);
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException(
-                        OBJECT_NOT_FOUND, String.format("Event with id: %d was not found", eventId)));
+        UserShortDto user = userClient.findById(userId);
+        EventFullDto event = eventClient.getEventById(eventId);
 
         if (event.getEventDate().isBefore(LocalDateTime.now())) {
             throw new ConflictException(CONDITIONS_NOT_MET, "Only past events can be commented on");
@@ -84,9 +87,11 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
         Comment comment = mapper.toModel(dto);
         comment.setAuthorId(userId);
-        comment.setEvent(event);
-
-        return mapper.toDto(commentRepository.save(comment));
+        comment.setEventId(eventId);
+        CommentDto result = mapper.toDto(commentRepository.save(comment));
+        result.setAuthorDto(user);
+        result.setEventDto(new CommentDto.CommentEventDto(event.getId(), event.getTitle()));
+        return result;
     }
 
     @Override
@@ -103,6 +108,9 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         comment.setUpdatedOn(LocalDateTime.now());
         CommentUpdateDto result = mapper.toUpdateDto(comment);
         result.setAuthorDto(user);
+
+        EventFullDto event = eventClient.getEventById(comment.getEventId());
+        result.setEventDto(new CommentUpdateDto.CommentEventDto(event.getId(), event.getTitle()));
         return result;
     }
 
@@ -121,22 +129,43 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Transactional(readOnly = true)
     public List<CommentUserDto> getCommentsByAuthor(Long userId, Pageable pageable) {
         userClient.findById(userId);
-        return commentRepository.findByAuthorIdOrderByCreatedOnDesc(userId, pageable)
+        List<Comment> comments = commentRepository.findByAuthorIdOrderByCreatedOnDesc(userId, pageable);
+
+        List<Long> eventIds = comments.stream().map(Comment::getEventId).toList();
+        Map<Long, EventShortDto> eventsMap = eventClient.getEventsByIds(eventIds)
                 .stream()
-                .map(mapper::toUserDto)
+                .collect(Collectors.toMap(EventShortDto::getId, Function.identity()));
+        return comments.stream()
+                .map(comment -> {
+                    CommentUserDto userComment = mapper.toUserDto(comment);
+                    EventShortDto event = eventsMap.get(comment.getEventId());
+                    userComment.setEventDto(new CommentUserDto.CommentEventDto(event.getId(), event.getTitle()));
+                    return userComment;
+                })
                 .toList();
     }
-
 
     //public
 
     @Override
     @Transactional(readOnly = true)
     public List<CommentDto> getCommentsByEvent(Long eventId, Pageable pageable) {
-        eventExistenceValidator.validateExists(eventId);
-        return commentRepository.findByEventIdOrderByCreatedOnDesc(eventId, pageable)
+        EventFullDto event = eventClient.getEventById(eventId);
+        List<Comment> comments = commentRepository.findByEventIdOrderByCreatedOnDesc(eventId, pageable);
+
+        List<Long> userIds = comments.stream().map(Comment::getAuthorId).toList();
+        Map<Long, UserDto> usersMap = userClient.find(userIds, 0, userIds.size())
                 .stream()
-                .map(mapper::toDto)
+                .collect(Collectors.toMap(UserDto::getId, Function.identity()));
+
+        return comments.stream()
+                .map(comment -> {
+                    CommentDto result = mapper.toDto(comment);
+                    result.setEventDto(new CommentDto.CommentEventDto(event.getId(), event.getTitle()));
+                    UserDto userDto = usersMap.get(comment.getAuthorId());
+                    result.setAuthorDto(new UserShortDto(userDto.getId(), userDto.getName()));
+                    return result;
+                })
                 .toList();
     }
 

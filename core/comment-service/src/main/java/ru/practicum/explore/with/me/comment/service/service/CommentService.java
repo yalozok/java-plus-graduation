@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.service.comment;
+package ru.practicum.explore.with.me.comment.service.service;
 
 import org.springframework.data.domain.Pageable;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;

@@ -1,8 +1,10 @@
-package ru.practicum.explore.with.me.controller.comment;
+package ru.practicum.explore.with.me.comment.service.controller;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.logging.Loggable;
-import ru.practicum.explore.with.me.service.comment.CommentService;
+import ru.practicum.explore.with.me.comment.service.service.CommentService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/comments")
@@ -23,7 +27,6 @@ public class CommentAdminController {
     private final CommentService commentService;
 
     @GetMapping("/{commentId}")
-    @ResponseStatus(HttpStatus.OK)
     @Loggable
     public CommentDto getCommentById(@PathVariable @NotNull @PositiveOrZero Long commentId) {
         return commentService.getCommentById(commentId);
@@ -34,5 +37,12 @@ public class CommentAdminController {
     @Loggable
     public void deleteCommentById(@PathVariable @NotNull @PositiveOrZero Long commentId) {
         commentService.deleteCommentByAdmin(commentId);
+    }
+
+    @GetMapping("/by-event/{eventId}")
+    @Loggable
+    public List<CommentDto> getCommentsByEvent(@PathVariable @NotNull @PositiveOrZero Long eventId,
+                                               Pageable pageable) {
+        return commentService.getCommentsByEvent(eventId, pageable);
     }
 }

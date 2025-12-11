@@ -1,19 +1,15 @@
-package ru.practicum.explore.with.me.model.comment;
+package ru.practicum.explore.with.me.comment.service.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.practicum.explore.with.me.model.event.Event;
 
 import java.time.LocalDateTime;
 
@@ -38,9 +34,8 @@ public class Comment {
     @Column(name = "updated")
     private LocalDateTime updatedOn;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "event_id")
-    private Event event;
+    @Column(name = "event_id")
+    private long eventId;
 
     @Column(name = "author_id")
     private long authorId;

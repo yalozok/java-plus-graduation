@@ -1,4 +1,4 @@
-package ru.practicum.explore.with.me.controller.comment;
+package ru.practicum.explore.with.me.comment.service.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -14,7 +14,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUpdateDto
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentUserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CreateUpdateCommentDto;
 import ru.practicum.explore.with.me.logging.Loggable;
-import ru.practicum.explore.with.me.service.comment.CommentService;
+import ru.practicum.explore.with.me.comment.service.service.CommentService;
 
 import java.util.List;
 
@@ -52,7 +52,6 @@ public class CommentPrivateController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     @Loggable
     public List<CommentUserDto> getCommentsByUser(@PathVariable @NotNull @PositiveOrZero Long userId,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
