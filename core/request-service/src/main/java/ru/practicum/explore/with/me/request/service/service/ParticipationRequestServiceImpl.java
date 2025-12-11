@@ -94,8 +94,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ParticipationRequest request = participationRequestRepository
                 .findById(cancelParticipationRequest.getRequestId())
                 .orElseThrow(() -> new NotFoundException("The required object was not found.",
-                            "ParticipationRequest with id=" + cancelParticipationRequest.getRequestId() +
-                                    " was not found"));
+                        "ParticipationRequest with id=" + cancelParticipationRequest.getRequestId() +
+                                " was not found"));
 
         userClient.findById(cancelParticipationRequest.getUserId());
         if (request.getRequesterId() != cancelParticipationRequest.getUserId()) {
@@ -156,14 +156,14 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
-    public List<ParticipationRequestDto> findAllByEventId(long eventId){
+    public List<ParticipationRequestDto> findAllByEventId(long eventId) {
         List<ParticipationRequest> requests = participationRequestRepository.findAllByEventId(eventId);
         return requests.stream().map(participationRequestMapper::toDto).toList();
     }
 
     @Override
     public List<ParticipationRequestDto> findAllByEventIdAndStatus(long eventId,
-                                                            ParticipationRequestStatus status) {
+                                                                   ParticipationRequestStatus status) {
         List<ParticipationRequest> requests = participationRequestRepository
                 .findAllByEventIdAndStatus(eventId, status);
         return requests.stream().map(participationRequestMapper::toDto).toList();
@@ -171,7 +171,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     @Transactional
-    public void updateStatus(EventRequestStatusUpdateRequest updateRequest){
+    public void updateStatus(EventRequestStatusUpdateRequest updateRequest) {
         participationRequestRepository.updateStatus(
                 updateRequest.getRequestIds(),
                 updateRequest.getStatus());

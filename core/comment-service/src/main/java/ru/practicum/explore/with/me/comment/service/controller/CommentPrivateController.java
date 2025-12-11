@@ -56,9 +56,6 @@ public class CommentPrivateController {
     public List<CommentUserDto> getCommentsByUser(@PathVariable @NotNull @PositiveOrZero Long userId,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                   @RequestParam(defaultValue = "10") @Positive int size) {
-        return commentService.getCommentsByAuthor(
-                userId,
-                PageRequest.of(from / size, size)
-        );
+        return commentService.getCommentsByAuthor(userId, PageRequest.of(from / size, size));
     }
 }

@@ -1,12 +1,10 @@
 package ru.practicum.explore.with.me.controller.event;
 
-import feign.Param;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
@@ -29,16 +27,15 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/events")
-@Slf4j
 @RequiredArgsConstructor
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
     private final CommentClient commentClient;
     private final StatClient statClient;
-    private final String className = this.getClass().getSimpleName();
 
     @GetMapping
+    @Loggable
     public List<EventShortDto> getEvents(@RequestParam(required = false) String text,
                                          @RequestParam(required = false) List<Long> categories,
                                          @RequestParam(required = false) Boolean paid,
@@ -61,25 +58,23 @@ public class EventPublicController {
         publicEventParam.setSort(sort);
         publicEventParam.setFrom(from);
         publicEventParam.setSize(size);
-        log.trace("{}: getEvents() call with publicEventParam: {}", className, publicEventParam);
 
         return eventsService.getPublicEvents(publicEventParam);
     }
 
     @GetMapping("/{eventId}")
+    @Loggable
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                      HttpServletRequest request) {
         statClient.createHit(request);
-        log.trace("{}: getEventById() call with eventId: {}", className, eventId);
         return eventsService.getPublicEventById(eventId);
     }
 
     @GetMapping("/{eventId}/comments")
+    @Loggable
     public List<CommentDto> getCommentsByEvent(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                                @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                                @RequestParam(defaultValue = "10") @Positive int size) {
-        log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
-                className, eventId, from, size);
         return commentClient.getCommentsByEvent(eventId, PageRequest.of(from / size, size));
     }
 
@@ -91,7 +86,7 @@ public class EventPublicController {
 
     @GetMapping("/by-ids")
     @Loggable
-    public List<EventShortDto> getEventsByIds (@RequestParam @NotNull List<Long> eventIds) {
+    public List<EventShortDto> getEventsByIds(@RequestParam @NotNull List<Long> eventIds) {
         return eventsService.getEventsByIds(eventIds);
     }
 }

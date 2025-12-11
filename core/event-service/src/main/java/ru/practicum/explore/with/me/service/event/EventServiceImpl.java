@@ -189,10 +189,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .stream().map(user -> new UserShortDto(user.getId(), user.getName()))
                 .collect(Collectors.toMap(UserShortDto::getId, Function.identity()));
 
-        LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
-
         return events.stream()
                 .map(event -> {
                     EventShortDto eventShortDto = eventMapper.toShortDto(event);

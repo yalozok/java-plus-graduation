@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +18,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.event.AdminEventFilter;
 import ru.practicum.explore.with.me.interaction.api.dto.event.AdminEventSearchRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
 import ru.practicum.explore.with.me.interaction.api.dto.event.UpdateEventAdminRequestDto;
+import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.service.event.EventAdminService;
 
 import java.util.List;
@@ -27,16 +27,12 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/admin/events")
 @Validated
-@Slf4j
 public class EventAdminController {
-
-    private final String className = this.getClass().getSimpleName();
     private final EventAdminService service;
 
-    // GET /admin/events
     @GetMapping
+    @Loggable
     public List<EventFullDto> searchEvents(@ModelAttribute AdminEventSearchRequestDto req) {
-        log.trace("{}: searchEvents() call with dto: {}", className, req);
         Pageable page = PageRequest.of(req.getFrom() / req.getSize(), req.getSize());
         AdminEventFilter f = new AdminEventFilter(
                 req.getUsers(), req.getStates(), req.getCategories(),
@@ -44,11 +40,10 @@ public class EventAdminController {
         return service.search(f, page);
     }
 
-    // PATCH /admin/events/{id}
     @PatchMapping("/{eventId}")
+    @Loggable
     public EventFullDto updateEvent(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                     @RequestBody @Valid UpdateEventAdminRequestDto dto) {
-        log.trace("{}: updateEvent() call with eventId: {}, dto: {}", className, eventId, dto);
         return service.update(eventId, dto);
     }
 }

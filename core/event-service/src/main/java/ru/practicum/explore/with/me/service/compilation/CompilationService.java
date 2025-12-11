@@ -1,7 +1,6 @@
 package ru.practicum.explore.with.me.service.compilation;
 
 
-
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationCreateDto;
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationUpdateDto;

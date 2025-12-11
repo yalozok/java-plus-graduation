@@ -4,7 +4,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.explore.with.me.interaction.api.dto.category.CategoryDto;
+import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.service.category.CategoryServiceImpl;
 
 import java.util.List;
@@ -20,21 +20,19 @@ import java.util.List;
 @RequestMapping("/categories")
 @RequiredArgsConstructor
 @Validated
-@Slf4j
 public class CategoryPublicController {
-    private final String className = this.getClass().getSimpleName();
     private final CategoryServiceImpl categoryService;
 
     @GetMapping
+    @Loggable
     public List<CategoryDto> getCategories(@RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                            @RequestParam(defaultValue = "10") @Positive int size) {
-        log.trace("{}: getCategories() call with from: {}, size: {}", className, from, size);
         return categoryService.getCategories(from, size);
     }
 
     @GetMapping("/{id}")
+    @Loggable
     public CategoryDto getCategoryById(@PathVariable("id") @PositiveOrZero @NotNull Long id) {
-        log.trace("{}: getCategoryById() with id: {}", className, id);
         return categoryService.getCategory(id);
     }
 }

@@ -22,5 +22,5 @@ public interface EventClient {
                                   @RequestParam(defaultValue = "10") int size);
 
     @GetMapping("/events/by-ids")
-    List<EventShortDto> getEventsByIds (@RequestParam List<Long> eventIds);
+    List<EventShortDto> getEventsByIds(@RequestParam List<Long> eventIds);
 }

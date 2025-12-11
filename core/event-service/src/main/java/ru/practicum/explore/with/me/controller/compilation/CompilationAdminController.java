@@ -2,7 +2,6 @@ package ru.practicum.explore.with.me.controller.compilation;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,20 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationCreateDto;
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.compilation.CompilationUpdateDto;
+import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.service.compilation.CompilationService;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping(path = "/admin/compilations")
-@Slf4j
 public class CompilationAdminController {
-
-    private final String className = this.getClass().getSimpleName();
     private final CompilationService compilationService;
 
     @PostMapping
+    @Loggable
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<CompilationRequestDto> create(@RequestBody @Valid CompilationCreateDto compilationCreateDto) {
-        log.trace("{}: create() call with compilationCreateDto: {}", className, compilationCreateDto);
         CompilationRequestDto compilationRequestDto = compilationService.create(compilationCreateDto);
 
         return ResponseEntity
@@ -40,9 +38,9 @@ public class CompilationAdminController {
     }
 
     @PatchMapping("/{compId}")
+    @Loggable
     public ResponseEntity<CompilationRequestDto> update(@RequestBody @Valid CompilationUpdateDto compilationUpdateDto,
                                                         @PathVariable Long compId) {
-        log.trace("{}: update() call with compilationUpdateDto: {}, compilationId: {}", className, compilationUpdateDto, compId);
         CompilationRequestDto compilationRequestDto = compilationService.update(compilationUpdateDto, compId);
 
         return ResponseEntity
@@ -53,8 +51,8 @@ public class CompilationAdminController {
 
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Loggable
     public void delete(@PathVariable Long compId) {
-        log.trace("{}: delete() call with compilationId: {}", className, compId);
         compilationService.delete(compId);
     }
 }
