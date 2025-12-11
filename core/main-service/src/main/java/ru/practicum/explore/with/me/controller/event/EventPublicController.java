@@ -1,5 +1,6 @@
 package ru.practicum.explore.with.me.controller.event;
 
+import feign.Param;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -14,9 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.explore.with.me.interaction.api.client.comment.CommentClient;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.logging.Loggable;
-import ru.practicum.explore.with.me.service.comment.CommentService;
 import ru.practicum.explore.with.me.service.event.EventService;
 import ru.practicum.stats.client.StatClient;
 
@@ -33,7 +34,7 @@ import java.util.Objects;
 @Validated
 public class EventPublicController {
     private final EventService eventsService;
-    private final CommentService commentService;
+    private final CommentClient commentClient;
     private final StatClient statClient;
     private final String className = this.getClass().getSimpleName();
 
@@ -79,12 +80,18 @@ public class EventPublicController {
                                                @RequestParam(defaultValue = "10") @Positive int size) {
         log.trace("{}: getCommentsByEvent() call with eventId: {}, from: {}, size: {}",
                 className, eventId, from, size);
-        return commentService.getCommentsByEvent(eventId, PageRequest.of(from / size, size));
+        return commentClient.getCommentsByEvent(eventId, PageRequest.of(from / size, size));
     }
 
     @GetMapping("/internal/{eventId}")
     @Loggable
     public EventFullDto getEventById(@PathVariable("eventId") long eventId) {
         return eventsService.getEventFullDto(eventId);
+    }
+
+    @GetMapping("/by-ids")
+    @Loggable
+    public List<EventShortDto> getEventsByIds (@RequestParam @NotNull List<Long> eventIds) {
+        return eventsService.getEventsByIds(eventIds);
     }
 }

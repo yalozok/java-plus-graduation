@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -175,6 +176,29 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         EventStatistics stats = getEventStatistics(events, startStats, endStats);
         return events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats, userDto))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EventShortDto> getEventsByIds(List<Long> eventIds) {
+        List<Event> events = eventRepository.findByIdIn(eventIds);
+
+        List<Long> userIds = events.stream().map(Event::getInitiatorId).toList();
+        Map<Long, UserShortDto> userMap = userClient.find(userIds, 0, userIds.size())
+                .stream().map(user -> new UserShortDto(user.getId(), user.getName()))
+                .collect(Collectors.toMap(UserShortDto::getId, Function.identity()));
+
+        LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
+        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+
+        return events.stream()
+                .map(event -> {
+                    EventShortDto eventShortDto = eventMapper.toShortDto(event);
+                    eventShortDto.setInitiator(userMap.get(event.getInitiatorId()));
+                    return eventShortDto;
+                })
                 .toList();
     }
 
@@ -337,7 +361,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     private Category findCategoryByIdOrElseThrow(long categoryId) {
-        return categoryRepository.findById(categoryId).orElseThrow(() -> new NotFoundException("The required object was not found.", "Category with id=" + categoryId + " was not found"));
+        return categoryRepository.findById(categoryId).orElseThrow(() ->
+                new NotFoundException("The required object was not found.",
+                        "Category with id=" + categoryId + " was not found"));
     }
 
     private Long extractId(String uri) {

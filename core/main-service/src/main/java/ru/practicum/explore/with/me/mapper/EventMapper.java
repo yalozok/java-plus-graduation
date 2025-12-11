@@ -9,7 +9,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.model.event.Event;
 
-@Mapper(componentModel = "spring", uses = {CategoryMapper.class, CommentMapper.class, LocationMapper.class})
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class, LocationMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
     @Mapping(target = "views", ignore = true)
@@ -27,7 +27,6 @@ public interface EventMapper {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "initiatorId", ignore = true)
     @Mapping(target = "category", ignore = true)
-    @Mapping(target = "comments", ignore = true)
     Event toModel(NewEventDto eventDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

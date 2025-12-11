@@ -41,7 +41,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long userId,
                                      @PathVariable @PositiveOrZero @NotNull Long eventId) {
         log.trace("{}: getEventById() call with userId: {}, eventId: {}", className, userId, eventId);
@@ -49,7 +48,6 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto updateEvent(@PathVariable @PositiveOrZero @NotNull Long userId,
                                     @PathVariable @PositiveOrZero @NotNull Long eventId,
                                     @RequestBody @Valid UpdateEventUserRequest updateEvent) {
@@ -59,7 +57,6 @@ public class EventPrivateController {
     }
 
     @GetMapping()
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getEvents(@PathVariable @PositiveOrZero @NotNull Long userId,
                                          @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                          @RequestParam(defaultValue = "10") @Positive int size) {
@@ -68,7 +65,6 @@ public class EventPrivateController {
     }
 
     @GetMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getEventParticipationRequestsByUser(@PathVariable @PositiveOrZero @NotNull Long userId,
                                                                              @PathVariable @PositiveOrZero @NotNull Long eventId) {
         log.trace("{}: getEventParticipationRequestsByUser() call with userId: {}, eventId: {}",
@@ -77,7 +73,6 @@ public class EventPrivateController {
     }
 
     @PatchMapping("/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult updateEventRequestStatus(@PathVariable @PositiveOrZero @NotNull Long userId,
                                                                    @PathVariable @PositiveOrZero @NotNull Long eventId,
                                                                    @RequestBody @Valid EventRequestStatusUpdateRequest updateRequest) {

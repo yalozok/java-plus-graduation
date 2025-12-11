@@ -1,7 +1,6 @@
 package ru.practicum.explore.with.me.model.event;
 
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -12,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,10 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventState;
 import ru.practicum.explore.with.me.model.category.Category;
-import ru.practicum.explore.with.me.model.comment.Comment;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "events")
@@ -43,9 +39,6 @@ public class Event {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private Category category;
-
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<Comment> comments;
 
     @Column(name = "description", length = 7000)
     private String description;

@@ -19,8 +19,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Page<Event> findEventsByUser(@Param("userId") long userId,
                                  Pageable pageable);
 
-    //Optional<Event> findByIdAndState(Long id, EventState state);
-
     @Query("""
             SELECT e FROM Event AS e
             WHERE e.state = 'published'
@@ -58,4 +56,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                @Param("rangeStart") LocalDateTime rangeStart,
                                @Param("rangeEnd") LocalDateTime rangeEnd,
                                Pageable pageable);
+
+    List<Event> findByIdIn(List<Long> ids);
 }
