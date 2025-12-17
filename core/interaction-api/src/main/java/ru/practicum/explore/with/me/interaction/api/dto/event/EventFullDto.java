@@ -9,6 +9,8 @@ import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Data
@@ -41,4 +43,11 @@ public class EventFullDto {
     private EventState state;
     private String title;
     private Long views;
+
+    public static EventFullDto unavailable() {
+        EventFullDto dto = new EventFullDto();
+        dto.setId(0L);
+        dto.setTitle("Event-service unavailable");
+        return dto;
+    }
 }
