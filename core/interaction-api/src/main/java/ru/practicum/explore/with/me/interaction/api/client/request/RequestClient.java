@@ -2,6 +2,7 @@ package ru.practicum.explore.with.me.interaction.api.client.request;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.explore.with.me.interaction.api.client.user.UserFeignClientFallback;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
@@ -11,7 +12,8 @@ import java.util.List;
 
 @FeignClient(name = "request-service",
         path = "/requests/internal",
-        configuration = RequestFeignConfig.class)
+        configuration = RequestFeignConfig.class,
+        fallback = RequestFeignClientFallback.class)
 public interface RequestClient {
 
     @GetMapping("/by-ids")
