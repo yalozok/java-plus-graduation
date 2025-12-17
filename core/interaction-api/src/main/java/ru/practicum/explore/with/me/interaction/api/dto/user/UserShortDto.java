@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 public class UserShortDto {
     private Long id;
     private String name;
+
+    public static UserShortDto unavailable() {
+        return new UserShortDto(0L, "User-service unavailable");
+    }
 }

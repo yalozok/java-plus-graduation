@@ -53,6 +53,7 @@ public class UserAdminController {
 
     @DeleteMapping("/{userId}")
     @Loggable
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable
                        @Positive(message = "must be positive")
                        Long userId) {
