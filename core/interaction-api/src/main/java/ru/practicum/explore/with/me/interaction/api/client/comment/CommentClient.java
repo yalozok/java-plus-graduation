@@ -6,7 +6,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import ru.practicum.explore.with.me.interaction.api.client.user.UserFeignClientFallback;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 
 import java.util.List;

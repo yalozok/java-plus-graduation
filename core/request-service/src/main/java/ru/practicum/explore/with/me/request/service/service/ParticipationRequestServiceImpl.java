@@ -9,7 +9,6 @@ import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
-import ru.practicum.explore.with.me.interaction.api.dto.event.EventShortDto;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;

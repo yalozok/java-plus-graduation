@@ -2,7 +2,6 @@ package ru.practicum.explore.with.me.interaction.api.client.request;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.explore.with.me.interaction.api.client.user.UserFeignClientFallback;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
