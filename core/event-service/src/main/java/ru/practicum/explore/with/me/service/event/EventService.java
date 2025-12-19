@@ -3,11 +3,9 @@ package ru.practicum.explore.with.me.service.event;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
-import ru.practicum.explore.with.me.model.event.Event;
 import ru.practicum.explore.with.me.model.event.EventViewsParameters;
 
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 

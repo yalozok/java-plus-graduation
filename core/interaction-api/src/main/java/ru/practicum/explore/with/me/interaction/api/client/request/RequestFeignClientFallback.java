@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;

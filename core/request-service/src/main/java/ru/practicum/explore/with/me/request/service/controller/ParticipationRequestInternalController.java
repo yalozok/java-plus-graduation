@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
