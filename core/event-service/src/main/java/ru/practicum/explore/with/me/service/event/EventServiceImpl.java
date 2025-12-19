@@ -83,15 +83,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return eventMapper.toFullDtoWithStats(event, stats, userDto);
     }
 
-    private Event getEventIfInitiatedByUser(long userId, long eventId) {
+    @Transactional(readOnly = true)
+    protected Event getEventIfInitiatedByUser(long userId, long eventId) {
         userClient.findById(userId);
-        Event event = getEventById(eventId);
-
-        if (event.getInitiatorId() != userId) {
-            throw new ConflictException("For the requested operation the conditions are not met.",
-                    "Only initiator of event can can manipulate with it");
-        }
-        return event;
+        return eventRepository.getEventByIdAndInitiatorId(eventId, userId)
+                .orElseThrow(() -> new ConflictException("For the requested operation the conditions are not met.",
+                "Only initiator of event can can manipulate with it"));
     }
 
     @Override

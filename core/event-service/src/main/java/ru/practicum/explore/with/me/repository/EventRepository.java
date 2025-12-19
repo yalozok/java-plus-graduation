@@ -10,6 +10,7 @@ import ru.practicum.explore.with.me.model.event.Event;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("""
@@ -58,4 +59,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                Pageable pageable);
 
     List<Event> findByIdIn(List<Long> ids);
+
+    @Query("""
+        SELECT e
+        FROM Event e
+        WHERE e.initiatorId = :initiatorId
+        AND e.id = :eventId
+    """)
+    Optional<Event> getEventByIdAndInitiatorId(@Param("eventId") long eventId,
+                                              @Param("initiatorId") long initiatorId);
 }
