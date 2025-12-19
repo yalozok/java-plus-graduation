@@ -35,8 +35,6 @@ public interface EventService {
 
     Map<Long, Integer> getConfirmedRequests(List<Long> eventIds);
 
-    EventStatistics getEventStatistics(List<Event> events, LocalDateTime startStats, LocalDateTime endStats);
-
     List<EventShortDto> getEventsByIds(List<Long> eventIds);
 
     EventFullDto updateByAdmin(Long id, UpdateEventAdminRequestDto dto);

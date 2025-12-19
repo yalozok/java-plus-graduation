@@ -471,8 +471,8 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
     }
 
-    @Override
-    public EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
+
+    private EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
         if (events.isEmpty()) {
             return new EventStatistics(Map.of(), Map.of());
         }
