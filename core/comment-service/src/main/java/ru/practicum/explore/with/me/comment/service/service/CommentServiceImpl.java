@@ -72,8 +72,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     @Override
     public CommentDto createComment(Long userId, Long eventId, CreateUpdateCommentDto dto) {
-        validateText(dto.getText(), 100);
-
         UserShortDto user = userClient.findById(userId);
         EventFullDto event = eventClient.getEventById(eventId);
 
@@ -97,8 +95,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     public CommentUpdateDto updateComment(Long userId, Long commentId, CreateUpdateCommentDto dto) {
         UserShortDto user = userClient.findById(userId);
-        validateText(dto.getText(), 1000);
-
         Comment comment = getOrThrow(commentId);
         if (comment.getAuthorId() != userId) {
             throw new ForbiddenException(CONDITIONS_NOT_MET, "Only author can edit comment");
@@ -167,14 +163,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                     return result;
                 })
                 .toList();
-    }
-
-
-    private void validateText(String text, int max) {
-        if (text == null || text.isBlank() || text.length() > max) {
-            throw new BadRequestException("Text param constraint violation.",
-                    String.format("Comment text has to be 1–%d symbols", max));
-        }
     }
 
     private Comment getOrThrow(Long id) {
