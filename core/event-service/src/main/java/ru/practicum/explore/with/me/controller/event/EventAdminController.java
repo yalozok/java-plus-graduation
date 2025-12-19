@@ -19,7 +19,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.event.AdminEventSearchRe
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
 import ru.practicum.explore.with.me.interaction.api.dto.event.UpdateEventAdminRequestDto;
 import ru.practicum.explore.with.me.logging.Loggable;
-import ru.practicum.explore.with.me.service.event.EventAdminService;
+import ru.practicum.explore.with.me.service.event.EventService;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import java.util.List;
 @RequestMapping("/admin/events")
 @Validated
 public class EventAdminController {
-    private final EventAdminService service;
+    private final EventService service;
 
     @GetMapping
     @Loggable
@@ -37,13 +37,13 @@ public class EventAdminController {
         AdminEventFilter f = new AdminEventFilter(
                 req.getUsers(), req.getStates(), req.getCategories(),
                 req.getRangeStart(), req.getRangeEnd());
-        return service.search(f, page);
+        return service.searchByAdmin(f, page);
     }
 
     @PatchMapping("/{eventId}")
     @Loggable
     public EventFullDto updateEvent(@PathVariable @PositiveOrZero @NotNull Long eventId,
                                     @RequestBody @Valid UpdateEventAdminRequestDto dto) {
-        return service.update(eventId, dto);
+        return service.updateByAdmin(eventId, dto);
     }
 }

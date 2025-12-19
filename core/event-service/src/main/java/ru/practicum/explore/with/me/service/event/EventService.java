@@ -1,5 +1,6 @@
 package ru.practicum.explore.with.me.service.event;
 
+import org.springframework.data.domain.Pageable;
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.model.event.Event;
@@ -37,4 +38,8 @@ public interface EventService {
     EventStatistics getEventStatistics(List<Event> events, LocalDateTime startStats, LocalDateTime endStats);
 
     List<EventShortDto> getEventsByIds(List<Long> eventIds);
+
+    EventFullDto updateByAdmin(Long id, UpdateEventAdminRequestDto dto);
+
+    List<EventFullDto> searchByAdmin(AdminEventFilter f, Pageable page);
 }
