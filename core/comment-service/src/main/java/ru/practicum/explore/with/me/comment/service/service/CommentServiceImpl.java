@@ -17,7 +17,6 @@ import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventShortDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
-import ru.practicum.explore.with.me.interaction.api.exception.BadRequestException;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.ForbiddenException;
 import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
@@ -46,7 +45,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     private final RequestClient requestClient;
     private final CommentMapper mapper;
 
-
     // admin
 
     @Override
@@ -66,7 +64,6 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     public void deleteCommentByAdmin(Long id) {
         commentRepository.deleteById(id);
     }
-
 
     //private
 
