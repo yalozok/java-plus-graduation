@@ -35,7 +35,7 @@ public class CommentAdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Loggable
     public void deleteCommentById(@PathVariable @NotNull @PositiveOrZero Long commentId) {
-        commentService.deleteCommentByAdmin(commentId);
+        commentService.deleteComment(commentId);
     }
 
     @GetMapping("/by-event/{eventId}")

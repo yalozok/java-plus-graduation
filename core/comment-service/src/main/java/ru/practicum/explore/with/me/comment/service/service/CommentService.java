@@ -17,7 +17,7 @@ public interface CommentService {
     CommentDto getCommentById(Long id);
 
     // Удалить комментарий админом
-    void deleteCommentByAdmin(Long id);
+    void deleteComment(Long id);
 
     // private
 
