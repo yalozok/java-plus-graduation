@@ -181,11 +181,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     @Override
     public Map<Long, Integer> getRequestsCountByEventId(List<Long> eventIds) {
-        List<EventRequestCount> confirmedRequests =  participationRequestRepository.countGroupByEventId(eventIds);
+        List<EventRequestCount> confirmedRequests = participationRequestRepository.countGroupByEventId(eventIds);
         return confirmedRequests.stream().collect(
                 Collectors.toMap(
                         EventRequestCount::eventId,
-                        EventRequestCount::count
+                        r -> r.count().intValue()
                 )
         );
     }
