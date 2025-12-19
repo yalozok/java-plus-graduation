@@ -50,7 +50,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     // admin
 
     @Override
-    @Transactional(rollbackFor = Exception.class, readOnly = true)
+    @Transactional(readOnly = true)
     public CommentDto getCommentById(Long id) {
         Comment comment = getOrThrow(id);
         CommentDto result = mapper.toDto(comment);
