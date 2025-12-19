@@ -33,8 +33,6 @@ public interface EventService {
 
     List<EventShortDto> getPublicEvents(PublicEventParam params);
 
-    Map<Long, Integer> getConfirmedRequests(List<Long> eventIds);
-
     List<EventShortDto> getEventsByIds(List<Long> eventIds);
 
     EventFullDto updateByAdmin(Long id, UpdateEventAdminRequestDto dto);

@@ -8,6 +8,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.participation.Participat
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 
 import java.util.List;
+import java.util.Map;
 
 @FeignClient(name = "request-service",
         path = "/requests/internal",
@@ -30,7 +31,7 @@ public interface RequestClient {
     void updateStatus(@RequestBody EventRequestStatusUpdateRequest updateRequest);
 
     @GetMapping("/count-by-events")
-    List<EventRequestCount> getRequestsCountByEventId(@RequestParam List<Long> eventIds);
+    Map<Long, Integer> getRequestsCountByEventId(@RequestParam List<Long> eventIds);
 
     @GetMapping("/approved")
     boolean isParticipantApproved(@RequestParam long requestId, @RequestParam long eventId);

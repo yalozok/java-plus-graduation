@@ -11,6 +11,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.participation.Participat
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class RequestFeignClientFallback implements RequestClient{
     @GetMapping("/by-ids")
@@ -40,8 +41,8 @@ public class RequestFeignClientFallback implements RequestClient{
 
     @GetMapping("/count-by-events")
     @Override
-    public List<EventRequestCount> getRequestsCountByEventId(@RequestParam List<Long> eventIds) {
-        return Collections.emptyList();
+    public Map<Long, Integer> getRequestsCountByEventId(@RequestParam List<Long> eventIds) {
+        return Collections.emptyMap();
     }
 
     @GetMapping("/approved")

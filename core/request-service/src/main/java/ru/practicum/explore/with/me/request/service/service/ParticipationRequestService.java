@@ -1,7 +1,6 @@
 package ru.practicum.explore.with.me.request.service.service;
 
 
-import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestCount;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.CancelParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.NewParticipationRequest;
@@ -9,6 +8,7 @@ import ru.practicum.explore.with.me.interaction.api.dto.participation.Participat
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ParticipationRequestService {
     List<ParticipationRequestDto> find(Long userId);
@@ -27,5 +27,5 @@ public interface ParticipationRequestService {
 
     void updateStatus(EventRequestStatusUpdateRequest updateRequest);
 
-    List<EventRequestCount> getRequestsCountByEventId(List<Long> eventIds);
+    Map<Long, Integer> getRequestsCountByEventId(List<Long> eventIds);
 }

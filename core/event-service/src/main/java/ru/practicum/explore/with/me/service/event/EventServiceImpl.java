@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -184,7 +183,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     public List<EventShortDto> getEventsByIds(List<Long> eventIds) {
         List<Event> events = eventRepository.findByIdIn(eventIds);
 
-        Map<Long, UserShortDto> userMap = getInitiatorsMapFromEventList(events);
+        Map<Long, UserShortDto> userMap = getUserMapFromEventList(events);
         return events.stream()
                 .map(event -> {
                     EventShortDto eventShortDto = eventMapper.toShortDto(event);
@@ -305,7 +304,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             return List.of();
         }
 
-        Map<Long, UserShortDto> usersMap = getInitiatorsMapFromEventList(events);
+        Map<Long, UserShortDto> usersMap = getUserMapFromEventList(events);
         LocalDateTime startStats = params.getRangeStart() != null ? params.getRangeStart().truncatedTo(ChronoUnit.SECONDS)
                 : events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
@@ -329,17 +328,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             }
         }
         return views;
-    }
-
-    @Override
-    public Map<Long, Integer> getConfirmedRequests(List<Long> eventIds) {
-        List<EventRequestCount> confirmedRequests = requestClient.getRequestsCountByEventId(eventIds);
-        return confirmedRequests.stream().collect(
-                Collectors.toMap(
-                        EventRequestCount::eventId,
-                        r -> r.count().intValue()
-                )
-        );
     }
 
     // GET /admin/events
@@ -369,7 +357,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
             return List.of();
         }
 
-        Map<Long, UserShortDto> usersMap = getInitiatorsMapFromEventList(eventList);
+        Map<Long, UserShortDto> usersMap = getUserMapFromEventList(eventList);
         LocalDateTime startStats = eventList.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(eventList, startStats, endStats);
@@ -378,7 +366,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .toList();
     }
 
-    private Map<Long, UserShortDto> getInitiatorsMapFromEventList(List<Event> events) {
+    private Map<Long, UserShortDto> getUserMapFromEventList(List<Event> events) {
         List<Long> initiatorIds = events.stream()
                 .map(Event::getInitiatorId)
                 .distinct()
@@ -471,7 +459,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         }
     }
 
-
     private EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
         if (events.isEmpty()) {
             return new EventStatistics(Map.of(), Map.of());
@@ -483,7 +470,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .end(end)
                 .eventIds(eventIds).unique(true).build();
         Map<Long, Long> viewStats = getEventViews(params);
-        Map<Long, Integer> confirmedRequests = getConfirmedRequests(eventIds);
+        Map<Long, Integer> confirmedRequests = requestClient.getRequestsCountByEventId(eventIds);
         return new EventStatistics(viewStats, confirmedRequests);
     }
 

@@ -23,7 +23,9 @@ import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -178,7 +180,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
-    public List<EventRequestCount> getRequestsCountByEventId(List<Long> eventIds) {
-        return participationRequestRepository.countGroupByEventId(eventIds);
+    public Map<Long, Integer> getRequestsCountByEventId(List<Long> eventIds) {
+        List<EventRequestCount> confirmedRequests =  participationRequestRepository.countGroupByEventId(eventIds);
+        return confirmedRequests.stream().collect(
+                Collectors.toMap(
+                        EventRequestCount::eventId,
+                        EventRequestCount::count
+                )
+        );
     }
 }

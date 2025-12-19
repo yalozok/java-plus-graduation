@@ -12,6 +12,7 @@ import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.request.service.service.ParticipationRequestService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/requests/internal")
@@ -48,7 +49,7 @@ public class ParticipationRequestInternalController {
 
     @GetMapping("/count-by-events")
     @Loggable
-    public List<EventRequestCount> getRequestsCountByEventId(@RequestParam List<Long> eventIds) {
+    public Map<Long, Integer> getRequestsCountByEventId(@RequestParam List<Long> eventIds) {
         return requestService.getRequestsCountByEventId(eventIds);
     }
 
