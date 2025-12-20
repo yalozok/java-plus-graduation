@@ -68,7 +68,7 @@ public class EventServiceImpl implements EventService {
         return eventMapper.toFullDtoWithStats(event, stats, userDto);
     }
 
-    protected Event getEventIfInitiatedByUser(long userId, long eventId) {
+    private Event getEventIfInitiatedByUser(long userId, long eventId) {
         userClient.findById(userId);
         return eventTransactionalService.getEventByIdAndUserId(eventId, userId);
     }
@@ -236,11 +236,7 @@ public class EventServiceImpl implements EventService {
     }
 
     public EventFullDto getPublicEventById(long eventId) {
-        Event event = eventTransactionalService.getEventById(eventId);
-        if (event.getState() != EventState.PUBLISHED) {
-            throw new NotFoundException("The required object was not found.",
-                    "Event with id=" + eventId + " was not found");
-        }
+        Event event = eventTransactionalService.getEventByIdAndState(eventId, EventState.PUBLISHED);
         return toEventFullDto(event);
     }
 

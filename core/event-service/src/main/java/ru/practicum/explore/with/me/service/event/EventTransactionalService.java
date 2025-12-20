@@ -115,6 +115,13 @@ public class EventTransactionalService implements ExistenceValidator<Event> {
                         "Category with id=" + categoryId + " was not found"));
     }
 
+    @Transactional(readOnly = true)
+    public Event getEventByIdAndState(Long eventId, EventState state) {
+        return eventRepository.getEventByIdAndState(eventId, state)
+                .orElseThrow(() -> new NotFoundException("The required object was not found.",
+                        "Event with id=" + eventId + " was not found"));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public void validateExists(Long id) {
