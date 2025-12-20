@@ -1,12 +1,8 @@
 package ru.practicum.explore.with.me.service.event;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import ru.practicum.explore.with.me.interaction.api.client.request.RequestClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
@@ -25,9 +21,6 @@ import ru.practicum.explore.with.me.model.event.Event;
 import ru.practicum.explore.with.me.model.event.EventViewsParameters;
 import ru.practicum.explore.with.me.model.event.Location;
 
-import ru.practicum.explore.with.me.repository.CategoryRepository;
-import ru.practicum.explore.with.me.repository.EventRepository;
-import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 import ru.practicum.explore.with.me.util.StatsGetter;
 import ru.practicum.stats.dto.ViewStats;
 
@@ -42,37 +35,29 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class EventServiceImpl implements ExistenceValidator<Event>, EventService {
-    private final EventRepository eventRepository;
+public class EventServiceImpl implements EventService {
+    private final EventTransactionalService eventTransactionalService;
     private final UserClient userClient;
-    private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
     private final StatsGetter statsGetter;
     private final RequestClient requestClient;
     private final LocationMapper locationMapper;
 
-    @Transactional
     @Override
     public EventFullDto createEvent(long userId, NewEventDto eventDto) {
         UserShortDto userDto = userClient.findById(userId);
         long categoryId = eventDto.getCategory();
-        Category category = findCategoryByIdOrElseThrow(categoryId);
+        Category category = eventTransactionalService.getCategoryById(categoryId);
 
         Event event = eventMapper.toModel(eventDto);
         event.setInitiatorId(userDto.getId());
         event.setCategory(category);
         event.setState(EventState.PENDING);
-        Event eventSaved = eventRepository.save(event);
+        Event eventSaved = eventTransactionalService.saveEvent(event);
         EventFullDto eventFullDto = eventMapper.toFullDto(eventSaved);
         eventFullDto.setViews(0L);
         eventFullDto.setInitiator(userDto);
         return eventFullDto;
-    }
-
-    private Event getEventById(long eventId) {
-        return eventRepository.findById(eventId).orElseThrow(
-                () -> new NotFoundException("The required object was not found.",
-                        "Event with id=" + eventId + " was not found"));
     }
 
     private EventFullDto toEventFullDto(Event event) {
@@ -83,29 +68,23 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return eventMapper.toFullDtoWithStats(event, stats, userDto);
     }
 
-    @Transactional(readOnly = true)
     protected Event getEventIfInitiatedByUser(long userId, long eventId) {
         userClient.findById(userId);
-        return eventRepository.getEventByIdAndInitiatorId(eventId, userId)
-                .orElseThrow(() -> new ConflictException("For the requested operation the conditions are not met.",
-                "Only initiator of event can can manipulate with it"));
+        return eventTransactionalService.getEventByIdAndUserId(eventId, userId);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public EventFullDto getPrivateEventById(long userId, long eventId) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
         return toEventFullDto(event);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public EventFullDto getEventFullDto(long eventId) {
-        Event event = getEventById(eventId);
+        Event event = eventTransactionalService.getEventById(eventId);
         return toEventFullDto(event);
     }
 
-    @Transactional
     @Override
     public EventFullDto updateEvent(long userId, long eventId, UpdateEventUserRequest updateEvent) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
@@ -117,7 +96,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
 
         if (updateEvent.getCategory() != null) {
             long categoryId = updateEvent.getCategory();
-            Category category = findCategoryByIdOrElseThrow(categoryId);
+            Category category = eventTransactionalService.getCategoryById(categoryId);
             event.setCategory(category);
         }
 
@@ -154,16 +133,14 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         if (updateEvent.getRequestModeration() != null) {
             event.setRequestModeration(updateEvent.getRequestModeration());
         }
-        eventRepository.save(event);
+        eventTransactionalService.saveEvent(event);
         return toEventFullDto(event);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByUser(long userId, int from, int count) {
         UserShortDto userDto = userClient.findById(userId);
-        Pageable pageable = PageRequest.of(from, count, Sort.by("createdOn").ascending());
-        List<Event> events = eventRepository.findEventsByUser(userId, pageable).getContent();
+        List<Event> events = eventTransactionalService.getEventsByUserId(userId, from, count);
         if (events.isEmpty()) {
             return List.of();
         }
@@ -175,10 +152,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     @Override
     public List<EventShortDto> getEventsByIds(List<Long> eventIds) {
-        List<Event> events = eventRepository.findByIdIn(eventIds);
+        List<Event> events = eventTransactionalService.getEventsByIds(eventIds);
 
         Map<Long, UserShortDto> userMap = getUserMapFromEventList(events);
         return events.stream()
@@ -191,14 +167,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getEventParticipationRequestsByUser(long userId, long eventId) {
         getEventIfInitiatedByUser(userId, eventId);
         return requestClient.findAllByEventId(eventId);
     }
 
     @Override
-    @Transactional
     public EventRequestStatusUpdateResult updateEventRequestStatus(long userId, long eventId,
                                                                    EventRequestStatusUpdateRequest updateRequest) {
         Event event = getEventIfInitiatedByUser(userId, eventId);
@@ -241,14 +215,14 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         if (!confirmedDto.isEmpty()) {
             requestClient.updateStatus(
                     new EventRequestStatusUpdateRequest(
-                    confirmedDto.stream().map(ParticipationRequestDto::getId).toList(),
-                    ParticipationRequestStatus.CONFIRMED));
+                            confirmedDto.stream().map(ParticipationRequestDto::getId).toList(),
+                            ParticipationRequestStatus.CONFIRMED));
         }
         if (!rejectedDto.isEmpty()) {
             requestClient.updateStatus(
                     new EventRequestStatusUpdateRequest(
-                    rejectedDto.stream().map(ParticipationRequestDto::getId).toList(),
-                    ParticipationRequestStatus.REJECTED));
+                            rejectedDto.stream().map(ParticipationRequestDto::getId).toList(),
+                            ParticipationRequestStatus.REJECTED));
         }
         if (remainingSpots.get() == 0) {
             List<Long> pendingIds = requestClient
@@ -261,10 +235,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         return new EventRequestStatusUpdateResult(confirmedDto, rejectedDto);
     }
 
-    @Transactional(readOnly = true)
     public EventFullDto getPublicEventById(long eventId) {
-        Event event = getEventById(eventId);
-        if(event.getState() != EventState.PUBLISHED) {
+        Event event = eventTransactionalService.getEventById(eventId);
+        if (event.getState() != EventState.PUBLISHED) {
             throw new NotFoundException("The required object was not found.",
                     "Event with id=" + eventId + " was not found");
         }
@@ -272,7 +245,6 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<EventShortDto> getPublicEvents(PublicEventParam params) {
         if (params.getRangeStart() != null && params.getRangeEnd() != null
                 && params.getRangeStart().isAfter(params.getRangeEnd())) {
@@ -280,23 +252,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                     "Start: " + params.getRangeStart() + " End: " + params.getRangeEnd());
         }
 
-        Pageable pageable = PageRequest.of(
-                params.getFrom() / params.getSize(),
-                params.getSize(),
-                getSort(params.getSort())
-        );
-
-        // Get events from a repository
-        Page<Event> page = eventRepository.findPublicEvents(
-                params.getText(),
-                params.getCategories(),
-                params.getPaid(),
-                params.getRangeStart(),
-                params.getRangeEnd(),
-                pageable);
-
-        List<Event> events = page.getContent();
-
+        List<Event> events = eventTransactionalService.getPublicEvents(params);
         if (events.isEmpty()) {
             return List.of();
         }
@@ -328,28 +284,9 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     // GET /admin/events
-    @Transactional(readOnly = true)
     @Override
     public List<EventFullDto> searchByAdmin(AdminEventFilter f, Pageable page) {
-
-        List<EventState> states = null;
-        if (f.getStates() != null && !f.getStates().isEmpty()) {
-            states = f.getStates().stream()
-                    .map(String::toUpperCase)
-                    .map(EventState::valueOf)
-                    .toList();
-        }
-
-        Page<Event> events = eventRepository.searchForAdmin(
-                emptyToNull(f.getUsers()),
-                states,
-                emptyToNull(f.getCategories()),
-                f.getRangeStart(),
-                f.getRangeEnd(),
-                page
-        );
-
-        List<Event> eventList = events.getContent();
+        List<Event> eventList = eventTransactionalService.getEventsAdmin(f, page);
         if (eventList.isEmpty()) {
             return List.of();
         }
@@ -358,7 +295,7 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         LocalDateTime startStats = eventList.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
         LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         EventStatistics stats = getEventStatistics(eventList, startStats, endStats);
-        return events.stream()
+        return eventList.stream()
                 .map(event -> eventMapper.toFullDtoWithStats(event, stats, usersMap.get(event.getInitiatorId())))
                 .toList();
     }
@@ -377,18 +314,13 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
     }
 
     // PATCH /admin/events/{id}
-    @Transactional
     @Override
     public EventFullDto updateByAdmin(Long id, UpdateEventAdminRequestDto dto) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("The required object was not found.",
-                        "Event with id=" + id + " was not found"));
+        Event event = eventTransactionalService.getEventById(id);
         eventMapper.updateFromAdmin(dto, event);
 
         if (dto.getCategory() != null) {
-            event.setCategory(categoryRepository.findById(dto.getCategory())
-                    .orElseThrow(() -> new NotFoundException("The required object was not found.",
-                            "Category with id=" + dto.getCategory() + " was not found")));
+            event.setCategory(eventTransactionalService.getCategoryById(dto.getCategory()));
         }
 
         if (dto.getStateAction() != null) {
@@ -397,10 +329,8 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
                 case REJECT_EVENT -> reject(event);
             }
         }
-        return eventMapper.toFullDto(eventRepository.save(event));
+        return eventMapper.toFullDto(eventTransactionalService.saveEvent(event));
     }
-
-
 
     private void publish(Event e) {
         if (e.getState() != EventState.PENDING) {
@@ -423,36 +353,12 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         e.setState(EventState.CANCELED);
     }
 
-    @Transactional(readOnly = true)
-    protected Category findCategoryByIdOrElseThrow(long categoryId) {
-        return categoryRepository.findById(categoryId).orElseThrow(() ->
-                new NotFoundException("The required object was not found.",
-                        "Category with id=" + categoryId + " was not found"));
-    }
-
     private Long extractId(String uri) {
         try {
             String[] parts = uri.split("/");
             return Long.parseLong(parts[parts.length - 1]);
         } catch (Exception e) {
             return null;
-        }
-    }
-
-    private Sort getSort(EventPublicSort sort) {
-        if (sort == null) return Sort.unsorted();
-        return switch (sort) {
-            case EVENT_DATE -> Sort.by("eventDate").ascending();
-            case VIEWS -> Sort.by("views").descending();
-        };
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void validateExists(Long id) {
-        if (eventRepository.findById(id).isEmpty()) {
-            throw new NotFoundException("The required object was not found.",
-                    "Event with id=" + id + " was not found");
         }
     }
 
@@ -469,9 +375,5 @@ public class EventServiceImpl implements ExistenceValidator<Event>, EventService
         Map<Long, Long> viewStats = getEventViews(params);
         Map<Long, Integer> confirmedRequests = requestClient.getRequestsCountByEventId(eventIds);
         return new EventStatistics(viewStats, confirmedRequests);
-    }
-
-    private <T> List<T> emptyToNull(List<T> list) {
-        return (list == null || list.isEmpty()) ? null : list;
     }
 }
