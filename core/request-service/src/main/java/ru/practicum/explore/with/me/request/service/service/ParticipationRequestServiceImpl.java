@@ -3,7 +3,6 @@ package ru.practicum.explore.with.me.request.service.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explore.with.me.interaction.api.client.event.EventClient;
 import ru.practicum.explore.with.me.interaction.api.client.user.UserClient;
 import ru.practicum.explore.with.me.interaction.api.dto.event.EventFullDto;
@@ -14,12 +13,9 @@ import ru.practicum.explore.with.me.interaction.api.dto.participation.NewPartici
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestDto;
 import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
-import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.request.service.model.ParticipationRequestMapper;
 import ru.practicum.explore.with.me.request.service.model.ParticipationRequest;
-import ru.practicum.explore.with.me.request.service.model.ParticipationRequestRepository;
 import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
-import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,52 +25,45 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class ParticipationRequestServiceImpl implements ParticipationRequestService,
-        ExistenceValidator<ParticipationRequest>, DataProvider<ParticipationRequestDto, ParticipationRequest> {
-
-    private final ParticipationRequestRepository participationRequestRepository;
+public class ParticipationRequestServiceImpl implements ParticipationRequestService, DataProvider<ParticipationRequestDto, ParticipationRequest> {
     private final UserClient userClient;
     private final EventClient eventClient;
     private final ParticipationRequestMapper participationRequestMapper;
-
+    private final RequestTransactionalService requestTransactionalService;
 
     @Override
     public List<ParticipationRequestDto> find(Long userId) {
         userClient.findById(userId);
-        return participationRequestRepository.findAllByRequesterId(userId).stream()
+        return requestTransactionalService.findAllByUserId(userId)
+                .stream()
                 .map(this::getDto)
                 .toList();
     }
 
     @Override
-    @Transactional
     public ParticipationRequestDto create(NewParticipationRequest newParticipationRequest) {
         Long requesterId = newParticipationRequest.getUserId();
         Long eventId = newParticipationRequest.getEventId();
-
-        if (participationRequestRepository.existsByRequesterIdAndEventId(
-                requesterId, eventId)) {
+        if (requestTransactionalService.existsByRequesterIdAndEventId(requesterId, eventId)) {
             throw new ConflictException("Duplicate request.", "participationRequest with requesterId: " + requesterId +
                     ", and eventId: " + eventId + " already exists");
         }
 
         EventFullDto event = eventClient.getEventById(eventId);
-
         if (event.getPublishedOn() == null) {
             throw new ConflictException("Can't create participation request for unpublished event.",
                     "event with id: " + eventId + " is not published yet");
         }
 
         userClient.findById(requesterId);
-
         if (event.getInitiator().getId().equals(requesterId)) {
             throw new ConflictException("Initiator can't create participation request.", "requesterId: "
                     + requesterId + " equals to initiatorId: " + event.getInitiator().getId());
         }
 
         if (event.getParticipantLimit() != 0) {
-            List<ParticipationRequest> alreadyConfirmed = participationRequestRepository
-                    .findAllByEventIdAndStatus(eventId, ParticipationRequestStatus.CONFIRMED);
+            List<ParticipationRequest> alreadyConfirmed = requestTransactionalService
+                    .getAllByEventIdAndStatus(eventId, ParticipationRequestStatus.CONFIRMED);
             AtomicInteger remainingSpots = new AtomicInteger(event.getParticipantLimit() - alreadyConfirmed.size());
             if (remainingSpots.get() <= 0) {
                 throw new ConflictException("Participant limit is reached.", "event with id: " + eventId +
@@ -87,29 +76,24 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             request.setStatus(ParticipationRequestStatus.CONFIRMED);
         }
 
-        return getDto(participationRequestRepository.save(request));
+        return getDto(requestTransactionalService.saveRequest(request));
     }
 
     @Override
-    @Transactional
     public ParticipationRequestDto cancel(CancelParticipationRequest cancelParticipationRequest) {
-        ParticipationRequest request = participationRequestRepository
-                .findById(cancelParticipationRequest.getRequestId())
-                .orElseThrow(() -> new NotFoundException("The required object was not found.",
-                        "ParticipationRequest with id=" + cancelParticipationRequest.getRequestId() +
-                                " was not found"));
+        Long userId = cancelParticipationRequest.getUserId();
+        Long requestId = cancelParticipationRequest.getRequestId();
+        ParticipationRequest request = requestTransactionalService.findById(requestId);
 
-        userClient.findById(cancelParticipationRequest.getUserId());
-        if (request.getRequesterId() != cancelParticipationRequest.getUserId()) {
+        userClient.findById(userId);
+        if (request.getRequesterId() != userId) {
             throw new ConflictException("Request can be cancelled only by an owner",
-                    "User with id=" + cancelParticipationRequest.getUserId() +
-                            " is not an owner of request with id=" + cancelParticipationRequest.getRequestId());
+                    "User with id=" + userId + " is not an owner of request with id=" + requestId);
         }
 
-        ParticipationRequestDto result = participationRequestMapper.toDto(
-                participationRequestRepository.findById(cancelParticipationRequest.getRequestId()).get());
+        ParticipationRequestDto result = participationRequestMapper.toDto(request);
         result.setStatus(ParticipationRequestStatus.CANCELED);
-        participationRequestRepository.deleteById(cancelParticipationRequest.getRequestId());
+        requestTransactionalService.delete(requestId);
         return result;
     }
 
@@ -133,55 +117,38 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     }
 
     @Override
-    public void validateExists(Long id) {
-        if (participationRequestRepository.findById(id).isEmpty()) {
-            throw new NotFoundException("The required object was not found.",
-                    "ParticipationRequest with id=" + id + " was not found");
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public boolean isParticipantApproved(Long userId, Long eventId) {
-        return participationRequestRepository
-                .existsByRequesterIdAndEventIdAndStatus(
-                        userId,
-                        eventId,
-                        ParticipationRequestStatus.CONFIRMED
-                );
+        return requestTransactionalService.isParticipantApproved(userId, eventId);
     }
 
     @Override
     public List<ParticipationRequestDto> findAllByIds(List<Long> requestIds) {
-        List<ParticipationRequest> requests = participationRequestRepository.findAllById(requestIds);
+        List<ParticipationRequest> requests = requestTransactionalService.findAllById(requestIds);
         return requests.stream().map(participationRequestMapper::toDto).toList();
     }
 
     @Override
     public List<ParticipationRequestDto> findAllByEventId(long eventId) {
-        List<ParticipationRequest> requests = participationRequestRepository.findAllByEventId(eventId);
+        List<ParticipationRequest> requests = requestTransactionalService.findAllByEventId(eventId);
         return requests.stream().map(participationRequestMapper::toDto).toList();
     }
 
     @Override
     public List<ParticipationRequestDto> findAllByEventIdAndStatus(long eventId,
                                                                    ParticipationRequestStatus status) {
-        List<ParticipationRequest> requests = participationRequestRepository
-                .findAllByEventIdAndStatus(eventId, status);
+        List<ParticipationRequest> requests = requestTransactionalService
+                .getAllByEventIdAndStatus(eventId, status);
         return requests.stream().map(participationRequestMapper::toDto).toList();
     }
 
     @Override
-    @Transactional
     public void updateStatus(EventRequestStatusUpdateRequest updateRequest) {
-        participationRequestRepository.updateStatus(
-                updateRequest.getRequestIds(),
-                updateRequest.getStatus());
+        requestTransactionalService.updateStatus(updateRequest.getRequestIds(), updateRequest.getStatus());
     }
 
     @Override
     public Map<Long, Integer> getRequestsCountByEventId(List<Long> eventIds) {
-        List<EventRequestCount> confirmedRequests = participationRequestRepository.countGroupByEventId(eventIds);
+        List<EventRequestCount> confirmedRequests = requestTransactionalService.getRequestCountByEventId(eventIds);
         return confirmedRequests.stream().collect(
                 Collectors.toMap(
                         EventRequestCount::eventId,
