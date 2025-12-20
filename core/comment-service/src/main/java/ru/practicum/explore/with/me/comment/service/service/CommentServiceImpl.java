@@ -19,11 +19,8 @@ import ru.practicum.explore.with.me.interaction.api.dto.user.UserDto;
 import ru.practicum.explore.with.me.interaction.api.dto.user.UserShortDto;
 import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.interaction.api.exception.ForbiddenException;
-import ru.practicum.explore.with.me.interaction.api.exception.NotFoundException;
 import ru.practicum.explore.with.me.comment.service.model.CommentMapper;
 import ru.practicum.explore.with.me.comment.service.model.Comment;
-import ru.practicum.explore.with.me.comment.service.model.CommentRepository;
-import ru.practicum.explore.with.me.interaction.api.util.ExistenceValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,12 +31,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(propagation = Propagation.REQUIRED)
-public class CommentServiceImpl implements CommentService, ExistenceValidator<Comment> {
-
-    private static final String OBJECT_NOT_FOUND = "Required object was not found.";
+public class CommentServiceImpl implements CommentService {
     private static final String CONDITIONS_NOT_MET = "Conditions are not met.";
-
-    private final CommentRepository commentRepository;
+    private final CommentTransactionalService commentTransactionalService;
     private final UserClient userClient;
     private final EventClient eventClient;
     private final RequestClient requestClient;
@@ -49,7 +43,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
 
     @Override
     public CommentDto getCommentById(Long id) {
-        Comment comment = getCommentOrThrowException(id);
+        Comment comment = commentTransactionalService.getCommentById(id);
         CommentDto result = mapper.toDto(comment);
         UserShortDto userDto = userClient.findById(comment.getAuthorId());
         result.setAuthorDto(userDto);
@@ -60,9 +54,8 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     }
 
     @Override
-    @Transactional
     public void deleteComment(Long id) {
-        commentRepository.deleteById(id);
+        commentTransactionalService.deleteComment(id);
     }
 
     //private
@@ -83,7 +76,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
         Comment comment = mapper.toModel(dto);
         comment.setAuthorId(userId);
         comment.setEventId(eventId);
-        CommentDto result = mapper.toDto(saveComment(comment));
+        CommentDto result = mapper.toDto(commentTransactionalService.saveComment(comment));
         result.setAuthorDto(user);
         result.setEventDto(new CommentDto.CommentEventDto(event.getId(), event.getTitle()));
         return result;
@@ -92,7 +85,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     public CommentUpdateDto updateComment(Long userId, Long commentId, CreateUpdateCommentDto dto) {
         UserShortDto user = userClient.findById(userId);
-        Comment comment = getCommentOrThrowException(commentId);
+        Comment comment = commentTransactionalService.getCommentById(commentId);
         if (comment.getAuthorId() != userId) {
             throw new ForbiddenException(CONDITIONS_NOT_MET, "Only author can edit comment");
         }
@@ -110,7 +103,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     public void deleteCommentByAuthor(Long userId, Long commentId) {
         userClient.findById(userId);
-        Comment comment = getCommentOrThrowException(commentId);
+        Comment comment = commentTransactionalService.getCommentById(commentId);
 
         if (comment.getAuthorId() != userId) {
             throw new ForbiddenException(CONDITIONS_NOT_MET, "Only author / admin can delete comment");
@@ -121,7 +114,7 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
     @Override
     public List<CommentUserDto> getCommentsByAuthor(Long userId, Pageable pageable) {
         userClient.findById(userId);
-        List<Comment> comments = findByAuthorIdOrderDesc(userId, pageable);
+        List<Comment> comments = commentTransactionalService.getCommentsByUserIdOrderDesc(userId, pageable);
 
         List<Long> eventIds = comments.stream().map(Comment::getEventId).toList();
         Map<Long, EventShortDto> eventsMap = eventClient.getEventsByIds(eventIds)
@@ -137,23 +130,12 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    protected List<Comment> findByAuthorIdOrderDesc (Long userId, Pageable pageable) {
-        return commentRepository.findByAuthorIdOrderByCreatedOnDesc(userId, pageable);
-    }
-
-    @Transactional(readOnly = true)
-    protected List<Comment> findByEventIdOrderDesc (Long userId, Pageable pageable) {
-        return commentRepository.findByEventIdOrderByCreatedOnDesc(userId, pageable);
-    }
-
     //public
 
     @Override
     public List<CommentDto> getCommentsByEvent(Long eventId, Pageable pageable) {
         EventFullDto event = eventClient.getEventById(eventId);
-        List<Comment> comments = findByEventIdOrderDesc(eventId, pageable);
-
+        List<Comment> comments = commentTransactionalService.getCommentsByEventIdOrderDesc(eventId, pageable);
         List<Long> userIds = comments.stream().map(Comment::getAuthorId).toList();
         Map<Long, UserDto> usersMap = userClient.find(userIds, 0, userIds.size())
                 .stream()
@@ -168,26 +150,5 @@ public class CommentServiceImpl implements CommentService, ExistenceValidator<Co
                     return result;
                 })
                 .toList();
-    }
-
-    @Transactional(readOnly = true)
-    protected Comment getCommentOrThrowException(Long id) {
-        return commentRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException(OBJECT_NOT_FOUND,
-                        String.format("Comment with id: %d was not found", id)));
-    }
-
-    @Transactional
-    protected Comment saveComment(Comment comment) {
-        return commentRepository.save(comment);
-    }
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public void validateExists(Long id) {
-        if (commentRepository.findById(id).isEmpty()) {
-            throw new NotFoundException(OBJECT_NOT_FOUND, "Comment with id=" + id + " was not found");
-        }
     }
 }
