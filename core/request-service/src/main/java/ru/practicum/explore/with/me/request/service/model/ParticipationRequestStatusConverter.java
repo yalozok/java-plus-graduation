@@ -1,0 +1,19 @@
+package ru.practicum.explore.with.me.request.service.model;
+
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import ru.practicum.explore.with.me.interaction.api.dto.participation.ParticipationRequestStatus;
+
+@Convert
+public class ParticipationRequestStatusConverter implements AttributeConverter<ParticipationRequestStatus, String> {
+    @Override
+    public String convertToDatabaseColumn(ParticipationRequestStatus status) {
+        return status == null ? null : status.name().toLowerCase();
+    }
+
+    @Override
+    public ParticipationRequestStatus convertToEntityAttribute(String dbData) {
+        return dbData == null ? null : ParticipationRequestStatus.valueOf(dbData.toUpperCase());
+    }
+}
