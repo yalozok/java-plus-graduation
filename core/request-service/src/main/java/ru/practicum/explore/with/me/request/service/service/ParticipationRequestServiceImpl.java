@@ -16,6 +16,7 @@ import ru.practicum.explore.with.me.interaction.api.exception.ConflictException;
 import ru.practicum.explore.with.me.request.service.model.ParticipationRequestMapper;
 import ru.practicum.explore.with.me.request.service.model.ParticipationRequest;
 import ru.practicum.explore.with.me.interaction.api.util.DataProvider;
+import ru.practicum.stats.client.StatClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class ParticipationRequestServiceImpl implements ParticipationRequestService, DataProvider<ParticipationRequestDto, ParticipationRequest> {
     private final UserClient userClient;
     private final EventClient eventClient;
+    private final StatClient statClient;
     private final ParticipationRequestMapper participationRequestMapper;
     private final RequestTransactionalService requestTransactionalService;
 
@@ -75,7 +77,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(ParticipationRequestStatus.CONFIRMED);
         }
-
+        statClient.sendRegisterAction(requesterId, eventId);
         return getDto(requestTransactionalService.saveRequest(request));
     }
 
