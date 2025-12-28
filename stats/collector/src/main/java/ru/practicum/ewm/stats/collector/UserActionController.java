@@ -14,7 +14,7 @@ import ru.practicum.ewm.stats.proto.UserActionProto;
 @Slf4j
 @RequiredArgsConstructor
 public class UserActionController extends UserActionControllerGrpc.UserActionControllerImplBase {
-    UserActionService actionService;
+    private final UserActionService actionService;
 
     @Override
     public void collectUserAction(UserActionProto userAction, StreamObserver<Empty> responseObserver) {
