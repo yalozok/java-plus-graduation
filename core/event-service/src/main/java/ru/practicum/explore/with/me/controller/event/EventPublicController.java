@@ -1,6 +1,5 @@
 package ru.practicum.explore.with.me.controller.event;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -8,16 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.explore.with.me.interaction.api.client.comment.CommentClient;
 import ru.practicum.explore.with.me.interaction.api.dto.comment.CommentDto;
 import ru.practicum.explore.with.me.logging.Loggable;
 import ru.practicum.explore.with.me.service.event.EventService;
-import ru.practicum.stats.client.StatClient;
 
 import ru.practicum.explore.with.me.interaction.api.dto.event.*;
 
@@ -32,7 +26,6 @@ import java.util.Objects;
 public class EventPublicController {
     private final EventService eventsService;
     private final CommentClient commentClient;
-    private final StatClient statClient;
 
     @GetMapping
     @Loggable
@@ -44,10 +37,7 @@ public class EventPublicController {
                                          @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                          @RequestParam(required = false) EventPublicSort sort,
                                          @RequestParam(defaultValue = "0") int from,
-                                         @RequestParam(defaultValue = "10") int size,
-                                         HttpServletRequest request) {
-        statClient.createHit(request);
-
+                                         @RequestParam(defaultValue = "10") int size) {
         PublicEventParam publicEventParam = new PublicEventParam();
         publicEventParam.setText(Objects.requireNonNullElse(text, ""));
         publicEventParam.setCategories(categories);
@@ -64,10 +54,9 @@ public class EventPublicController {
 
     @GetMapping("/{eventId}")
     @Loggable
-    public EventFullDto getEventById(@PathVariable @PositiveOrZero @NotNull Long eventId,
-                                     HttpServletRequest request) {
-        statClient.createHit(request);
-        return eventsService.getPublicEventById(eventId);
+    public EventFullDto getEventById(@RequestHeader("X-EWM-USER-ID") @PositiveOrZero @NotNull Long userId,
+                                     @PathVariable @PositiveOrZero @NotNull Long eventId) {
+        return eventsService.getPublicEventById(userId, eventId);
     }
 
     @GetMapping("/{eventId}/comments")
@@ -88,5 +77,19 @@ public class EventPublicController {
     @Loggable
     public List<EventShortDto> getEventsByIds(@RequestParam @NotNull List<Long> eventIds) {
         return eventsService.getEventsByIds(eventIds);
+    }
+
+    @PutMapping("/{eventId}/like")
+    @Loggable
+    public void likeEvent(@RequestHeader("X-EWM-USER-ID")  @PositiveOrZero @NotNull Long userId,
+                                  @PathVariable("eventId") @PositiveOrZero @NotNull Long eventId) {
+        eventsService.likeEvent(userId, eventId);
+    }
+
+    @GetMapping("/recommendations")
+    @Loggable
+    public List<EventShortDto> getRecommendationsForUser(@RequestHeader("X-EWM-USER-ID") @PositiveOrZero @NotNull Long userId,
+                                                         @RequestParam(defaultValue = "10") @Positive int limit) {
+        return eventsService.getRecommendationsForUser(userId, limit);
     }
 }

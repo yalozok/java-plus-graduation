@@ -70,4 +70,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                               @Param("initiatorId") long initiatorId);
 
     Optional<Event> getEventByIdAndState(Long eventId, EventState state);
+
+    @Query("""
+        SELECT e
+        FROM Event e
+        WHERE e.id = :eventId
+        AND e.state = 'published'
+        AND e.eventDate < CURRENT_TIMESTAMP
+    """)
+    Optional<Event> getPastAndPublishedEventById(@Param("eventId") long eventId);
 }

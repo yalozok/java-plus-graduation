@@ -8,11 +8,11 @@ import java.util.Map;
 @AllArgsConstructor
 @Data
 public class EventStatistics {
-    private final Map<Long, Long> views;
+    private final Map<Long, Double> ratings;
     private final Map<Long, Integer> confirmedRequests;
 
-    public long getViews(Long eventId) {
-        return views.getOrDefault(eventId, 0L);
+    public double getRating(Long eventId) {
+        return ratings.getOrDefault(eventId,  0D);
     }
 
     public int getConfirmedRequests(Long eventId) {
