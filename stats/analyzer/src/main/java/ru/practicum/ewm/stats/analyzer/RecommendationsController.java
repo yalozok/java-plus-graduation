@@ -16,7 +16,7 @@ import java.util.Map;
 @GrpcService
 @RequiredArgsConstructor
 @Slf4j
-public class RecommendationController extends RecommendationControllerGrpc.RecommendationControllerImplBase {
+public class RecommendationsController extends RecommendationsControllerGrpc.RecommendationsControllerImplBase {
     private final RecommendationService recommendationService;
     private final InteractionService interactionService;
 

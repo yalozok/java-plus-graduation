@@ -15,9 +15,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class StatClient {
     @GrpcClient("analyzer")
-    private RecommendationControllerGrpc.RecommendationControllerBlockingStub recommendationClient;
+    private RecommendationsControllerGrpc.RecommendationsControllerBlockingStub recommendationClient;
 
-    @GrpcClient("controller")
+    @GrpcClient("collector")
     private UserActionControllerGrpc.UserActionControllerBlockingStub actionClient;
 
     @Loggable

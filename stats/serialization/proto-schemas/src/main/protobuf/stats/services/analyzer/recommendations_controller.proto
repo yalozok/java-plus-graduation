@@ -9,7 +9,7 @@ import "stats/messages/interactions_count_request.proto";
 
 option java_package = "ru.practicum.ewm.stats.proto";
 
-service RecommendationController {
+service RecommendationsController {
   rpc GetRecommendationsForUser (stats.message.UserPredictionsRequestProto)
       returns (stream stats.message.RecommendedEventProto);
 
