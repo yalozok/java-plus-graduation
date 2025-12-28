@@ -1,4 +1,4 @@
-package ru.practicum.ewm.stats.aggregator;
+package ru.practicum.ewm.stats.aggregator.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,40 +13,30 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class AggregatorService {
-    //eventId -> (userId -> weight)
-    private final Map<Long, Map<Long, Double>> eventUserWeights = new HashMap<>();
-
-    //userId  -> (eventId -> weight)
-    private final Map<Long, Map<Long, Double>> userEventWeights = new HashMap<>();
-
-    //eventId -> sum_all
-    private final Map<Long, Double> eventWeightSum = new HashMap<>();
-
-    //eventA  -> (eventB -> sum_min)
-    private final Map<Long, Map<Long, Double>> minWeightsSum = new HashMap<>();
+    private final EventUserWeights eventUserWeights = new EventUserWeights();
+    private final UserEventWeights userEventWeights = new UserEventWeights();
+    private final EventWeightSums eventWeightSums = new EventWeightSums();
+    private final MinWeightSums minWeightSums = new MinWeightSums();
 
     public List<EventSimilarityAvro> handleUserAction(UserActionAvro userAction) {
         long userId = userAction.getUserId();
         long eventA = userAction.getEventId();
         double actionWeight = getActionWeightByType(userAction.getActionType());
 
-        Map<Long, Double> eventUsers = eventUserWeights.computeIfAbsent(eventA, id -> new HashMap<>());
-        Map<Long, Double> userEvents = userEventWeights.computeIfAbsent(userId, id -> new HashMap<>());
-        Double oldWeight = eventUsers.get(userId);
-
+        Double oldWeight = eventUserWeights.getUserWeight(eventA, userId);
         if (oldWeight != null && oldWeight >= actionWeight) {
             return Collections.emptyList();
         }
 
         double deltaWeight = oldWeight == null ? actionWeight : actionWeight - oldWeight;
 
-        eventUsers.put(userId, actionWeight);
-        userEvents.put(eventA, actionWeight);
-        eventWeightSum.merge(eventA, deltaWeight, Double::sum);
+        eventUserWeights.putUserWeight(eventA, userId, actionWeight);
+        userEventWeights.putEventWeight(userId, eventA, actionWeight);
+        eventWeightSums.add(eventA, deltaWeight);
 
         List<EventSimilarityAvro> similarities = new ArrayList<>();
 
-        for (Map.Entry<Long, Double> event : userEvents.entrySet()) {
+        for (Map.Entry<Long, Double> event : userEventWeights.entriesForUser(userId)) {
             long eventB = event.getKey();
             if (eventB == eventA) continue;
 
@@ -60,9 +50,7 @@ public class AggregatorService {
             double deltaMin = newMin - oldMin;
 
             if (deltaMin > 0) {
-                minWeightsSum
-                        .computeIfAbsent(first, k -> new HashMap<>())
-                        .merge(second, deltaMin, Double::sum);
+                minWeightSums.addDelta(first,second,deltaMin);
             }
             similarities.add(buildSimilarity(first, second, Instant.now()));
         }
@@ -79,12 +67,10 @@ public class AggregatorService {
     }
 
     private EventSimilarityAvro buildSimilarity(long first, long second, Instant timestamp) {
-        double sumMin = minWeightsSum
-                .getOrDefault(first, Map.of())
-                .getOrDefault(second, 0.0);
+        double sumMin = minWeightSums.get(first,second);
 
-        double sumA = eventWeightSum.getOrDefault(first, 0.0);
-        double sumB = eventWeightSum.getOrDefault(second, 0.0);
+        double sumA = eventWeightSums.get(first);
+        double sumB = eventWeightSums.get(second);
 
         double score = 0.0;
         if (sumMin > 0 && sumA > 0 && sumB > 0) {

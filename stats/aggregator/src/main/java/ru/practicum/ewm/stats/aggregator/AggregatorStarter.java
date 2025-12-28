@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.aggregator.config.KafkaProperties;
 import ru.practicum.ewm.stats.aggregator.config.TopicType;
 import ru.practicum.ewm.stats.aggregator.config.YamlUtils;
+import ru.practicum.ewm.stats.aggregator.service.AggregatorService;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.explore.with.me.logging.Loggable;
