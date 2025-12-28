@@ -54,20 +54,17 @@ public class AggregatorService {
 
             long first = Math.min(eventA, eventB);
             long second = Math.max(eventA, eventB);
-            double oldMin = oldWeight == null
-                    ? 0.0
-                    : Math.min(oldWeight, weightB);
+            double oldMin = oldWeight == null ? 0.0 : Math.min(oldWeight, weightB);
 
             double newMin = Math.min(actionWeight, weightB);
             double deltaMin = newMin - oldMin;
 
-            if (deltaMin <= 0) continue;
-
-            minWeightsSum
-                    .computeIfAbsent(first, k -> new HashMap<>())
-                    .merge(second, deltaMin, Double::sum);
-
-            similarities.add(buildSimilarity(first, second, userAction.getTimestamp()));
+            if (deltaMin > 0) {
+                minWeightsSum
+                        .computeIfAbsent(first, k -> new HashMap<>())
+                        .merge(second, deltaMin, Double::sum);
+            }
+            similarities.add(buildSimilarity(first, second, Instant.now()));
         }
         return similarities;
     }

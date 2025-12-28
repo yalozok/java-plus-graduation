@@ -58,8 +58,10 @@ public class AggregatorStarter {
 
                 for (ConsumerRecord<String, SpecificRecordBase> record : records) {
                     UserActionAvro event = handleRecord(record);
+                    log.info("Aggregator received event: {}", event);
                     List<EventSimilarityAvro> similarities = service.handleUserAction(event);
                     for (EventSimilarityAvro sim : similarities) {
+                        log.info("Aggregator sending similarity: {}", sim);
                         send(sim);
                     }
                     TopicPartition tp = new TopicPartition(record.topic(), record.partition());
