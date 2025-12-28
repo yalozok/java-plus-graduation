@@ -59,14 +59,19 @@ public class RecommendationService {
         }
 
         Set<Long> interactedEventIds = extractEventIds(recentInteractions);
-        Map<Long, Double> candidateSimilarities = findCandidateSimilarities(interactedEventIds);
+        List<Similarity> similarities = similarityRepository.findSimilaritiesForEvents(interactedEventIds);
+        if (similarities.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Double> candidateSimilarities = findCandidateSimilarities(interactedEventIds, similarities);
         if (candidateSimilarities.isEmpty()) {
             return Map.of();
         }
 
         Set<Long> topCandidates = selectTopCandidates(candidateSimilarities, limit);
         Map<Long, Double> userRatings = loadUserRatings(userId, interactedEventIds);
-        return predictRatings(topCandidates, interactedEventIds, userRatings);
+        return predictRatings(topCandidates, interactedEventIds, userRatings, similarities);
     }
 
     private Set<Long> extractEventIds(List<Interaction> interactions) {
@@ -75,8 +80,7 @@ public class RecommendationService {
                 .collect(Collectors.toSet());
     }
 
-    private Map<Long, Double> findCandidateSimilarities(Set<Long> interactedEventIds) {
-        List<Similarity> similarities = similarityRepository.findSimilaritiesForEvents(interactedEventIds);
+    private Map<Long, Double> findCandidateSimilarities(Set<Long> interactedEventIds, List<Similarity> similarities) {
         Map<Long, Double> result = new HashMap<>();
 
         for (Similarity s : similarities) {
@@ -109,9 +113,10 @@ public class RecommendationService {
     }
 
     private Map<Long, Double> predictRatings(Set<Long> candidates,
-                                             Set<Long> interactedEventIds, Map<Long, Double> userRatings) {
+                                             Set<Long> interactedEventIds,
+                                             Map<Long, Double> userRatings,
+                                             List<Similarity> similarities) {
         Map<Long, Double> result = new LinkedHashMap<>();
-        List<Similarity> similarities = similarityRepository.findSimilaritiesForEvents(interactedEventIds);
 
         for (Long candidate : candidates) {
             Map<Long, Double> neighbors = findNearestNeighbors(candidate, similarities, interactedEventIds);
