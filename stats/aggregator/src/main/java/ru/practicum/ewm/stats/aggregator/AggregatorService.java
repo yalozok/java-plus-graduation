@@ -74,6 +74,7 @@ public class AggregatorService {
             case VIEW -> 0.4;
             case REGISTER -> 0.8;
             case LIKE -> 1.0;
+            default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
         };
     }
 
