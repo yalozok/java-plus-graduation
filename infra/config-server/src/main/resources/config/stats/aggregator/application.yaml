@@ -1,9 +1,9 @@
 grpc:
   server:
     port: 0
-
-server:
-  port: 0
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
 
 logging:
   level:
