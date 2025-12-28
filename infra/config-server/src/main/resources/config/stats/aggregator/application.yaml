@@ -1,0 +1,27 @@
+grpc:
+  server:
+    port: 0
+
+server:
+  port: 0
+
+logging:
+  level:
+    ru.practicum.ewm.stats: TRACE
+
+aggregator:
+  kafka:
+    consumer:
+      bootstrap.servers: localhost:9092
+      key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value.deserializer: ru.practicum.kafka.serializer.UserActionDeserializer
+      group.id: "aggregator-action-group"
+      enable.auto.commit: false
+      auto.offset.reset: "earliest"
+    producer:
+      bootstrap.servers: localhost:9092
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: ru.practicum.kafka.serializer.GeneralAvroSerializer
+    topics:
+      EVENTS_SIMILARITY: stats.events-similarity.v1
+      USER_ACTIONS: stats.user-actions.v1
