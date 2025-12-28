@@ -5,6 +5,6 @@ package stats.message;
 option java_package = "ru.practicum.ewm.stats.proto";
 option java_multiple_files = true;
 
-message InteractionCountRequestProto {
+message InteractionsCountRequestProto {
   repeated int64 event_id = 1;
 }

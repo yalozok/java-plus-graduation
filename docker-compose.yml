@@ -31,15 +31,6 @@ services:
                              --bootstrap-server kafka:29092'"
     init: true
 
-  stats-db:
-    image: postgres:16.1
-    environment:
-      POSTGRES_DB: ewm_stats
-      POSTGRES_USER: stats
-      POSTGRES_PASSWORD: stats
-    ports:
-      - "6542:5432"
-
   events-db:
     image: postgres:16.1
     environment:
@@ -75,3 +66,12 @@ services:
       POSTGRES_PASSWORD: comments
     ports:
       - "6546:5432"
+
+  analyzer-db:
+    image: postgres:16.1
+    environment:
+      POSTGRES_DB: stats_analyzer
+      POSTGRES_USER: analyzer
+      POSTGRES_PASSWORD: analyzer
+    ports:
+      - "6547:5432"
