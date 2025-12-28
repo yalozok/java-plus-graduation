@@ -1,9 +1,9 @@
 grpc:
   server:
     port: 0
-
-server:
-  port: 0
+    enableKeepAlive: true
+    keepAliveWithoutCalls: true
+    negotiationType: plaintext
 
 spring:
   sql:
@@ -29,12 +29,19 @@ spring:
 
 logging:
   level:
+    com:
+      netflix:
+        discovery: INFO
+        appinfo: INFO
     org:
       springframework:
         orm.jpa: INFO
         transaction: INFO
         transaction.interceptor: TRACE
         orm.jpa.JpaTransactionManager: DEBUG
+        cloud:
+          netflix.eureka: INFO
+          client.discovery: INFO
     hibernate:
       SQL: DEBUG
 
