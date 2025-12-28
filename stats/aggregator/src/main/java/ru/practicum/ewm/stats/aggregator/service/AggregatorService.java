@@ -41,17 +41,10 @@ public class AggregatorService {
             if (eventB == eventA) continue;
 
             double weightB = event.getValue();
+            minWeightSums.applyUserWeightChange(eventA, eventB, oldWeight, actionWeight, weightB);
 
             long first = Math.min(eventA, eventB);
             long second = Math.max(eventA, eventB);
-            double oldMin = oldWeight == null ? 0.0 : Math.min(oldWeight, weightB);
-
-            double newMin = Math.min(actionWeight, weightB);
-            double deltaMin = newMin - oldMin;
-
-            if (deltaMin > 0) {
-                minWeightSums.addDelta(first,second,deltaMin);
-            }
             similarities.add(buildSimilarity(first, second, Instant.now()));
         }
         return similarities;
