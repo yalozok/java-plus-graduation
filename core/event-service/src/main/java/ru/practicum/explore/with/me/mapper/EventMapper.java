@@ -12,13 +12,13 @@ import ru.practicum.explore.with.me.model.event.Event;
 @Mapper(componentModel = "spring", uses = {CategoryMapper.class, LocationMapper.class})
 public interface EventMapper {
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "initiator", ignore = true)
     @Mapping(target = "comments", ignore = true)
     EventFullDto toFullDto(Event event);
 
     @Mapping(target = "confirmedRequests", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     @Mapping(target = "initiator", ignore = true)
     EventShortDto toShortDto(Event event);
 
@@ -36,7 +36,7 @@ public interface EventMapper {
 
     default EventFullDto toFullDtoWithStats(Event event, EventStatistics stats, UserShortDto user) {
         EventFullDto dto = toFullDto(event);
-        dto.setViews(stats.getViews(event.getId()));
+        dto.setRating(stats.getRating(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
         dto.setInitiator(user);
         return dto;
@@ -44,7 +44,7 @@ public interface EventMapper {
 
     default EventShortDto toShortDtoWithStats(Event event, EventStatistics stats, UserShortDto user) {
         EventShortDto dto = toShortDto(event);
-        dto.setViews(stats.getViews(event.getId()));
+        dto.setRating(stats.getRating(event.getId()));
         dto.setConfirmedRequests(stats.getConfirmedRequests(event.getId()));
         dto.setInitiator(user);
         return dto;

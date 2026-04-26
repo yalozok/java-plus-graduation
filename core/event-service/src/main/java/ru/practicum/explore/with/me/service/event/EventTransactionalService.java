@@ -130,4 +130,11 @@ public class EventTransactionalService implements ExistenceValidator<Event> {
                     "Event with id=" + id + " was not found");
         }
     }
+
+    @Transactional(readOnly = true)
+    public Event getPastAndPublishedEventById(long eventId) {
+        return eventRepository.getPastAndPublishedEventById(eventId)
+                .orElseThrow(() -> new NotFoundException("The required object was not found.",
+                        "Event with id=" + eventId + " was not found"));
+    }
 }

@@ -17,16 +17,11 @@ import ru.practicum.explore.with.me.mapper.EventMapper;
 import ru.practicum.explore.with.me.mapper.LocationMapper;
 import ru.practicum.explore.with.me.model.category.Category;
 import ru.practicum.explore.with.me.model.event.Event;
-import ru.practicum.explore.with.me.model.event.EventViewsParameters;
 import ru.practicum.explore.with.me.model.event.Location;
-
-import ru.practicum.explore.with.me.util.StatsGetter;
-import ru.practicum.stats.dto.ViewStats;
+import ru.practicum.stats.client.StatClient;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,9 +33,9 @@ public class EventServiceImpl implements EventService {
     private final EventTransactionalService eventTransactionalService;
     private final UserClient userClient;
     private final EventMapper eventMapper;
-    private final StatsGetter statsGetter;
     private final RequestClient requestClient;
     private final LocationMapper locationMapper;
+    private final StatClient statClient;
 
     @Override
     public EventFullDto createEvent(long userId, NewEventDto eventDto) {
@@ -54,15 +49,13 @@ public class EventServiceImpl implements EventService {
         event.setState(EventState.PENDING);
         Event eventSaved = eventTransactionalService.saveEvent(event);
         EventFullDto eventFullDto = eventMapper.toFullDto(eventSaved);
-        eventFullDto.setViews(0L);
+        eventFullDto.setRating(0D);
         eventFullDto.setInitiator(userDto);
         return eventFullDto;
     }
 
     private EventFullDto toEventFullDto(Event event) {
-        LocalDateTime startStats = event.getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(List.of(event), startStats, endStats);
+        EventStatistics stats = getEventStatistics(List.of(event));
         UserShortDto userDto = userClient.findById(event.getInitiatorId());
         return eventMapper.toFullDtoWithStats(event, stats, userDto);
     }
@@ -143,9 +136,7 @@ public class EventServiceImpl implements EventService {
         if (events.isEmpty()) {
             return List.of();
         }
-        LocalDateTime startStats = events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         return events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats, userDto))
                 .toList();
@@ -234,8 +225,9 @@ public class EventServiceImpl implements EventService {
         return new EventRequestStatusUpdateResult(confirmedDto, rejectedDto);
     }
 
-    public EventFullDto getPublicEventById(long eventId) {
+    public EventFullDto getPublicEventById(long userId, long eventId) {
         Event event = eventTransactionalService.getEventByIdAndState(eventId, EventState.PUBLISHED);
+        statClient.sendViewAction(userId, eventId);
         return toEventFullDto(event);
     }
 
@@ -253,29 +245,38 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, UserShortDto> usersMap = getUserMapFromEventList(events);
-        LocalDateTime startStats = params.getRangeStart() != null ? params.getRangeStart().truncatedTo(ChronoUnit.SECONDS)
-                : events.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-
-        EventStatistics stats = getEventStatistics(events, startStats, endStats);
+        EventStatistics stats = getEventStatistics(events);
         return events.stream()
                 .map(event -> eventMapper.toShortDtoWithStats(event, stats, usersMap.get(event.getInitiatorId())))
                 .toList();
     }
 
     @Override
-    public Map<Long, Long> getEventViews(EventViewsParameters params) {
-        List<ViewStats> stats = statsGetter.getEventViewStats(params);
-        Map<Long, Long> views = new HashMap<>();
-        if (stats != null) {
-            for (ViewStats stat : stats) {
-                Long eventId = extractId(stat.getUri());
-                if (eventId != null) {
-                    views.put(eventId, stat.getHits());
-                }
-            }
+    public void likeEvent(long userId, long eventId) {
+        userClient.findById(userId);
+        eventTransactionalService.getEventByIdAndState(eventId,  EventState.PUBLISHED);
+        if(!requestClient.isParticipantApproved(userId, eventId)) {
+            throw new ConflictException("For the requested operation the conditions are not met.",
+                    "You can only like events you has attended: " + eventId);
         }
-        return views;
+        statClient.sendLikeAction(eventId, userId);
+    }
+
+    @Override
+    public List<EventShortDto> getRecommendationsForUser(long userId, int limit) {
+        userClient.findById(userId);
+        Map<Long, Double> recommendations = statClient.getRecommendationsForUser(userId, limit);
+        if (recommendations.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> eventIds = recommendations.keySet().stream().toList();
+        List<Event> events = eventTransactionalService.getEventsByIds(eventIds);
+        Map<Long, UserShortDto> usersMap = getUserMapFromEventList(events);
+        EventStatistics stats = getEventStatistics(events);
+        return events.stream()
+                .map(event -> eventMapper.toShortDtoWithStats(event, stats, usersMap.get(event.getInitiatorId())))
+                .toList();
     }
 
     // GET /admin/events
@@ -287,9 +288,7 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, UserShortDto> usersMap = getUserMapFromEventList(eventList);
-        LocalDateTime startStats = eventList.getFirst().getCreatedOn().truncatedTo(ChronoUnit.SECONDS);
-        LocalDateTime endStats = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-        EventStatistics stats = getEventStatistics(eventList, startStats, endStats);
+        EventStatistics stats = getEventStatistics(eventList);
         return eventList.stream()
                 .map(event -> eventMapper.toFullDtoWithStats(event, stats, usersMap.get(event.getInitiatorId())))
                 .toList();
@@ -348,27 +347,13 @@ public class EventServiceImpl implements EventService {
         e.setState(EventState.CANCELED);
     }
 
-    private Long extractId(String uri) {
-        try {
-            String[] parts = uri.split("/");
-            return Long.parseLong(parts[parts.length - 1]);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private EventStatistics getEventStatistics(List<Event> events, LocalDateTime start, LocalDateTime end) {
+    private EventStatistics getEventStatistics(List<Event> events) {
         if (events.isEmpty()) {
             return new EventStatistics(Map.of(), Map.of());
         }
-
         List<Long> eventIds = events.stream().map(Event::getId).toList();
-        EventViewsParameters params = EventViewsParameters.builder()
-                .start(start)
-                .end(end)
-                .eventIds(eventIds).unique(true).build();
-        Map<Long, Long> viewStats = getEventViews(params);
+        Map<Long, Double> ratings = statClient.getInteractionsCount(eventIds);
         Map<Long, Integer> confirmedRequests = requestClient.getRequestsCountByEventId(eventIds);
-        return new EventStatistics(viewStats, confirmedRequests);
+        return new EventStatistics(ratings, confirmedRequests);
     }
 }

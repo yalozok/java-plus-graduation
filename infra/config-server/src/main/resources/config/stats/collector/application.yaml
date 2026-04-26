@@ -1,0 +1,22 @@
+grpc:
+  server:
+    port: 0
+
+server:
+  port: 0
+
+collector:
+  kafka:
+    producer:
+      bootstrap.servers: localhost:9092
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: ru.practicum.kafka.serializer.GeneralAvroSerializer
+    topics:
+      USER_ACTIONS: stats.user-actions.v1
+
+logging:
+  level:
+    ru.practicum.ewm.stats: TRACE
+    org:
+      springframework: ERROR
+      apache.kafka: WARN

@@ -7,7 +7,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @SpringBootApplication(scanBasePackages = {
         "ru.practicum.explore.with.me.request",
-        "ru.practicum.explore.with.me.logging"})
+        "ru.practicum.explore.with.me.logging",
+        "ru.practicum.stats"})
 @EnableFeignClients(basePackages = {
         "ru.practicum.explore.with.me.interaction.api.client"
 })
